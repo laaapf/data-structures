@@ -121,40 +121,40 @@ TABM *divisao(TABM *x, int i, TABM *y, int t){
 	return x;
 }
 
-TABM *insere_nao_completo(TABM *a, int cod, char *nome, char *categoria, float preco, int t){
+TABM *insere_nao_completo(TABM *a,TP *pizza, int t){
 	int i = a->nchaves - 1;
 	if (a->folha){
-		while ((i >= 0) && (cod < a->chave[i])){
+		while ((i >= 0) && (pizza->cod < a->chave[i])){
 			a->chave[i + 1] = a->chave[i];
 			i--;
 		}
-		a->chave[i + 1] = cod;
-		a->pizza[i + 1] = pizza(cod, nome, categoria, preco);
+		a->chave[i + 1] = pizza->cod;
+		a->pizza[i + 1] = pizza;
 		a->nchaves++;
 		return a;
 	}
-	while ((i >= 0) && (cod < a->chave[i]))
+	while ((i >= 0) && (pizza->cod < a->chave[i]))
 		i--;
 	i++;
 	if (a->filho[i]->nchaves == ((2 * t) - 1)){
 		a = divisao(a, (i + 1), a->filho[i], t);
-		if (cod > a->chave[i])
+		if (pizza->cod > a->chave[i])
 			i++;
 	}
-	a->filho[i] = insere_nao_completo(a->filho[i], cod, nome, categoria, preco, t);
+	a->filho[i] = insere_nao_completo(a->filho[i], pizza, t);
 	return a;
 }
 
-TABM *insere(TABM *a, int cod, char *nome, char *categoria, float preco, int t){
-	TP *p = busca_pizza(a, cod);
+TABM *insere(TABM *a, TP *pizza, int t){
+	TP *p = busca_pizza(a, pizza->cod);
 	if (p){
-		altera_pizza(p,nome, categoria, preco);
+		altera_pizza(p, pizza->nome, pizza->categoria, pizza->preco);
 		return a;
 	}
 	if (!a){
 		a = cria(t);
-		a->chave[0] = cod;
-		a->pizza[0] = pizza(cod, nome, categoria, preco);
+		a->chave[0] = pizza->cod;
+		a->pizza[0] = pizza;
 		a->nchaves = 1;
 		return a;
 	}
@@ -164,10 +164,10 @@ TABM *insere(TABM *a, int cod, char *nome, char *categoria, float preco, int t){
 		S->folha = 0;
 		S->filho[0] = a;
 		S = divisao(S, 1, a, t);
-		S = insere_nao_completo(S, cod, nome, categoria, preco, t);
+		S = insere_nao_completo(S, pizza, t);
 		return S;
 	}
-	a = insere_nao_completo(a, cod, nome, categoria, preco, t);
+	a = insere_nao_completo(a, pizza, t);
 	return a;
 }
 
@@ -233,12 +233,14 @@ int tamanho_pizza_bytes(){
 
 int main(void){
 	TABM *arvore = inicializa();
+	TP *p;
 	int num = 0, cod;
 	char nome[10], categoria[10];
 	float preco;
 	while (num < 4){
 		scanf("%i %s %s %f", &cod, nome, categoria, &preco);
-		arvore = insere(arvore, cod, nome, categoria, preco, 2);
+		p = pizza(cod, nome, categoria, preco);
+		arvore = insere(arvore, p, 2);
 		num++;
 	}
 	imprime(arvore,0);
