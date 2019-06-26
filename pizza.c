@@ -50,9 +50,10 @@ void imprime(TABM *a, int andar){
     int i,j;
     for(i=0; i<=a->nchaves-1; i++){
       imprime(a->filho[i],andar+1);
-      printf("ok");
       for(j=0; j<=andar; j++) printf("   ");
-      imprime_pizza(a->pizza[i]);
+      if(a->folha) imprime_pizza(a->pizza[i]);
+      else printf("%d\n", a->chave[i]);
+      
     }
     imprime(a->filho[i],andar+1);
   }
@@ -203,7 +204,7 @@ int main(void){
   int num = 0, cod;
   char nome[10], categoria[10];
   float preco;
-  while(num < 3){
+  while(num < 4){
     scanf("%i %s %s %f",&cod, nome, categoria, &preco);
     arvore = insere(arvore, cod, nome, categoria, preco, 2);
     num++;
