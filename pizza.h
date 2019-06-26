@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct pz{
     int cod;
@@ -21,8 +22,8 @@ void libera(TABM *a);
 TABM *busca(TABM *a, int mat);
 void imprime(TABM *a, int andar);
 TABM *divisao(TABM *x, int i, TABM* y, int t);
-TABM *insere_nao_completo(TABM *x, int mat, int t);
-TABM *insere(TABM *T, int mat, int t);
+TABM *insere_nao_completo(TABM *a, int cod, char* nome, char* categoria, float preco, int t);
+TABM *insere(TABM *a, int cod, char* nome, char* categoria,float preco, int t);
 // Imprime pizza
 void imprime_pizza(TP *p);
 // Cria pizza

@@ -50,24 +50,25 @@ void imprime(TABM *a, int andar){
     int i,j;
     for(i=0; i<=a->nchaves-1; i++){
       imprime(a->filho[i],andar+1);
+      printf("ok");
       for(j=0; j<=andar; j++) printf("   ");
-      imprime_pizza(a->pizza[i])
+      imprime_pizza(a->pizza[i]);
     }
     imprime(a->filho[i],andar+1);
   }
 }
 
 void imprime_pizza(TP *p){
-	printf("%d, %s (%s), R$ %.2f\n", p->cod, p->nome, p->descricao, p->preco);
+	printf("%d, %s (%s), R$ %.2f\n", p->cod, p->nome, p->categoria, p->preco);
 }
 
 
-TP *pizza(int cod, char *nome, char *descricao, float preco){
+TP *pizza(int cod, char *nome, char *categoria, float preco){
 	TP *p = (TP *) malloc(sizeof(TP));
 	if (p) memset(p, 0, sizeof(TP));
 	p->cod = cod;
 	strcpy(p->nome, nome);
-	strcpy(p->descricao, descricao);
+	strcpy(p->categoria, categoria);
 	p->preco = preco;
 	return p;
 }
@@ -76,7 +77,7 @@ TP *pizza(int cod, char *nome, char *descricao, float preco){
 void salva_pizza(TP *p, FILE *out){
 	fwrite(&p->cod, sizeof(int), 1, out);
 	fwrite(p->nome, sizeof(char), sizeof(p->nome), out);
-	fwrite(p->descricao, sizeof(char), sizeof(p->descricao), out);
+	fwrite(p->categoria, sizeof(char), sizeof(p->categoria), out);
 	fwrite(&p->preco, sizeof(float), 1, out);
 }
 
@@ -88,7 +89,7 @@ TP *le_pizza(FILE *in){
 		return NULL;
 	}
 	fread(p->nome, sizeof(char), sizeof(p->nome), in);
-	fread(p->descricao, sizeof(char), sizeof(p->descricao), in);
+	fread(p->categoria, sizeof(char), sizeof(p->categoria), in);
 	fread(&p->preco, sizeof(float), 1, in);
 	return p;
 }
@@ -104,7 +105,7 @@ int cmp_pizza(TP *p1, TP *p2){
 	if (strcmp(p1->nome, p2->nome) != 0) {
 		return 0;
 	}
-	if (strcmp(p1->descricao, p2->descricao) != 0) {
+	if (strcmp(p1->categoria, p2->categoria) != 0) {
 		return 0;
 	}
 	if (p1->preco != p2->preco) {
@@ -121,7 +122,7 @@ int tamanho_pizza_bytes(){
 		sizeof(float); // preço
 }
 
-/* 
+ 
 TABM *divisao(TABM *x, int i, TABM* y, int t){
   TABM *z = cria(t);
   z->folha = y->folha;
@@ -136,58 +137,76 @@ TABM *divisao(TABM *x, int i, TABM* y, int t){
   }
   else {
     z->nchaves = t; //z possuir� uma chave a mais que y se for folha
-    for(j=0;j < t;j++) z->chave[j] = y->chave[j+t-1];//Caso em que y � folha, temos q passar a info para o n� da direita
+    for(j=0;j < t;j++){
+      z->chave[j] = y->chave[j+t-1];//Caso em que y � folha, temos q passar a info para o n� da direita
+      z->pizza[j] = y->pizza[j+t-1];
+    } 
     y->prox = z;
   }
   y->nchaves = t-1;
-  for(j=x->nchaves; j>=i; j--) x->filho[j+1]=x->filho[j];
+  for(j=x->nchaves; j>=i; j--) x->filho[j+1]=x->filho[j]; //reorganiza filhos
   x->filho[i] = z;
-  for(j=x->nchaves; j>=i; j--) x->chave[j] = x->chave[j-1];
+  for(j=x->nchaves; j>=i; j--) x->chave[j] = x->chave[j-1]; //sobe chaves
   x->chave[i-1] = y->chave[t-1];
   x->nchaves++;
   return x;
 }
 
 
-TABM *insere_nao_completo(TABM *x, int mat, int t){
-  int i = x->nchaves-1;
-  if(x->folha){
-    while((i>=0) && (mat < x->chave[i])){
-      x->chave[i+1] = x->chave[i];
+TABM *insere_nao_completo(TABM *a, int cod, char* nome, char* categoria, float preco, int t){
+  int i = a->nchaves-1;
+  if(a->folha){
+    while((i>=0) && (cod < a->chave[i])){
+      a->chave[i+1] = a->chave[i];
       i--;
     }
-    x->chave[i+1] = mat;
-    x->nchaves++;
-    return x;
+    a->chave[i+1] = cod;
+    a->pizza[i+1] = pizza(cod,nome,categoria,preco);
+    a->nchaves++;
+    return a;
   }
-  while((i>=0) && (mat < x->chave[i])) i--;
+  while((i>=0) && (cod < a->chave[i])) i--;
   i++;
-  if(x->filho[i]->nchaves == ((2*t)-1)){
-    x = divisao(x, (i+1), x->filho[i], t);
-    if(mat > x->chave[i]) i++;
+  if(a->filho[i]->nchaves == ((2*t)-1)){
+    a = divisao(a, (i+1), a->filho[i], t);
+    if(cod > a->chave[i]) i++;
   }
-  x->filho[i] = insere_nao_completo(x->filho[i], mat, t);
-  return x;
+  a->filho[i] = insere_nao_completo(a->filho[i], cod, nome, categoria, preco,  t);
+  return a;
 }
 
-TABM *insere(TABM *T, int mat, int t){
-  if(busca_pizza(T, mat)) return T;
-  if(!T){
-    T=cria(t);
-    T->chave[0] = mat;
-    T->nchaves=1;
-    return T;
+TABM *insere(TABM *a, int cod, char* nome, char* categoria,float preco, int t){
+  if(busca_pizza(a, cod)) return a;
+  if(!a){
+    a=cria(t);
+    a->chave[0] = cod;
+    a->pizza[0] = pizza(cod,nome,categoria,preco);
+    a->nchaves=1;
+    return a;
   }
-  if(T->nchaves == (2*t)-1){
+  if(a->nchaves == (2*t)-1){
     TABM *S = cria(t);
     S->nchaves=0;
     S->folha = 0;
-    S->filho[0] = T;
-    S = divisao(S,1,T,t);
-    S = insere_nao_completo(S, mat, t);
+    S->filho[0] = a;
+    S = divisao(S,1,a,t);
+    S = insere_nao_completo(S, cod, nome, categoria, preco, t);
     return S;
   }
-  T = insere_nao_completo(T, mat, t);
-  return T;
+  a = insere_nao_completo(a, cod, nome, categoria, preco, t);
+  return a;
 }
- */
+
+
+int main(void){
+  TABM * arvore = inicializa();
+  int num = 0, cod;
+  char nome[10], categoria[10];
+  float preco;
+  while(num < 3){
+    scanf("%i %s %s %f",&cod, nome, categoria, &preco);
+    arvore = insere(arvore, cod, nome, categoria, preco, 2);
+    num++;
+  }
+  imprime(arvore, 0);
+}
