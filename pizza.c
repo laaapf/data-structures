@@ -51,6 +51,13 @@ TP *busca_pizza(TABM *a, int cod){
 		i++; //caso o indice seja igual ao codigo, mas n seja uma folha, procura no filho da direita
 	return busca_pizza(a->filho[i], cod);
 }
+ 
+void altera_pizza(TP* pizza, char *nome, char *categoria, float preco){
+	strcpy(pizza->categoria, categoria);
+	strcpy(pizza->nome, nome);
+	pizza->preco = preco;
+	return;
+}
 
 void busca_categoria(TABM *a, char *categoria){
 	if(!a) return;
@@ -139,8 +146,11 @@ TABM *insere_nao_completo(TABM *a, int cod, char *nome, char *categoria, float p
 }
 
 TABM *insere(TABM *a, int cod, char *nome, char *categoria, float preco, int t){
-	if (busca_pizza(a, cod))
+	TP *p = busca_pizza(a, cod);
+	if (p){
+		altera_pizza(p,nome, categoria, preco);
 		return a;
+	}
 	if (!a){
 		a = cria(t);
 		a->chave[0] = cod;
@@ -231,5 +241,5 @@ int main(void){
 		arvore = insere(arvore, cod, nome, categoria, preco, 2);
 		num++;
 	}
-	busca_categoria(arvore, "do");
+	imprime(arvore,0);
 }
