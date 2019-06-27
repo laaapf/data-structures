@@ -193,6 +193,19 @@ void salva_pizza(TP *p, FILE *out){
 	fwrite(&p->preco, sizeof(float), 1, out);
 }
 
+TABM *le_dados(char* dados, int t){
+	FILE *fpd = fopen(dados, "rb+");
+	if(!fpd) exit(1);
+	TABM *a = inicializa();
+	TP *p;
+	while (p){
+		p = le_pizza(fpd);
+		a = insere(a,p,t);
+	}
+	free(p);
+	return a;
+}
+
 TP *le_pizza(FILE *in){
 	TP *p = (TP *)malloc(sizeof(TP));
 	if (0 >= fread(&p->cod, sizeof(int), 1, in)){
@@ -233,15 +246,11 @@ int tamanho_pizza_bytes(){
 
 int main(void){
 	TABM *arvore = inicializa();
-	TP *p;
-	int num = 0, cod;
-	char nome[10], categoria[10];
-	float preco;
-	while (num < 4){
-		scanf("%i %s %s %f", &cod, nome, categoria, &preco);
-		p = pizza(cod, nome, categoria, preco);
-		arvore = insere(arvore, p, 2);
-		num++;
-	}
+	/* int t;
+	char file[20];
+	scanf("%d %s", &t, file);
+	 */
+	le_dados("",2)
 	imprime(arvore,0);
+	free(arvore);
 }
