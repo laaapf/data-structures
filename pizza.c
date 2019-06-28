@@ -42,8 +42,15 @@ TABM *le_no(FILE *in){
 	fread(&a->prox, sizeof(int), 1, in);
 	return a;
 }
+int tamanho_no(int t){
+	return 3*(sizeof(int)) +	   // nchaves, folha e prox
+		2*(sizeof(int) * ((2*t)-1)) + // chaves e pizzas
+		sizeof(int) * (2*t);// filhos
+}
 
-/* 
+
+
+/*
 void libera(TABM *a){
 	if (a){
 		if (!a->folha){
@@ -59,22 +66,23 @@ void libera(TABM *a){
 		free(a->chave);
 		free(a);
 	}
-} */
-
-TP *busca_pizza(char* arvore, int cod){
-	FILE fpa = fopen(arvore, "rb");
-	if (!fpa)
-		exit(1);
+} 
+*/
+TP *busca_pizza(FILE *arvore, FILE *pizza, int cod){
+	TABM *a = le_no(arvore);
 	int i = 0;
 	while ((i < a->nchaves) && (cod > a->chave[i]))
 		i++; //procura em qual chave a pizza deverá estar
-	if ((i < a->nchaves) && (a->folha) && (cod == a->chave[i]))
-		return a->pizza[i]; //caso o indice seja igual o codigo e seja uma folha retorna a pizza encontrada
+	if ((i < a->nchaves) && (a->folha) && (cod == a->chave[i])){ //caso o indice seja igual o codigo e seja uma folha retorna a pizza encontrada
+		fseek(pizza,a->pizza[i], SEEK_SET);
+		return le_pizza(pizza);
+	} 
 	if (a->folha)
 		return NULL; //se for uma folha e n atender a condição de cima, a pizza n está na arvore
 	if (a->chave[i] == cod)
 		i++; //caso o indice seja igual ao codigo, mas n seja uma folha, procura no filho da direita
-	return busca_pizza(a->filho[i], cod);
+	fseek(arvore, a->filho[i], SEEK_SET)
+	return busca_pizza(arvore, pizza, cod);
 }
  
 void altera_pizza(TP* pizza, char *nome, char *categoria, float preco){
@@ -270,12 +278,5 @@ int tamanho_pizza_bytes(){
 }
 
 int main(void){
-	TABM *arvore = inicializa();
-	/* int t;
-	char file[20];
-	scanf("%d %s", &t, file);
-	 */
-	le_dados("",2)
-	imprime(arvore,0);
-	free(arvore);
+	
 }
