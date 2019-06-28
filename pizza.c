@@ -1,25 +1,49 @@
 #include "pizza.h"
 
-TABM *cria(int t){
-	TABM *novo = (TABM *)malloc(sizeof(TABM));
-	novo->nchaves = 0;
-	novo->chave = (int *)malloc(sizeof(int) * ((t * 2) - 1));
-	novo->pizza = (TP **)malloc(sizeof(TP *) * ((t * 2) - 1));
-	novo->folha = 1;
-	novo->filho = (TABM **)malloc(sizeof(TABM *) * t * 2);
-	novo->prox = NULL;
-	int i;
-	for (i = 0; i < (t * 2); i++)
-		novo->filho[i] = NULL;
-	for (int i = 0; i < ((2 * t) - 1); i++)
-		novo->pizza[i] = NULL;
-	return novo;
-}
-
 TABM *inicializa(){
 	return NULL;
 }
 
+TABM *cria(int t){
+	TABM *novo = (TABM *)malloc(sizeof(TABM));
+	novo->nchaves = 0;
+	novo->chave[(2*t)-1];
+	novo->pizza[(2*t)-1];
+	novo->folha = 1;
+	novo->filho[2*t];
+	novo->prox = -1;
+	int i;
+	for (i = 0; i < (t * 2); i++)
+		novo->filho[i] = -1;
+	for (int i = 0; i < ((2 * t) - 1); i++)
+		novo->pizza[i] = -1;
+	return novo;
+}
+
+void salva_no(TABM *a, FILE *out){
+	fwrite(&a->nchaves, sizeof(int), 1, out);
+	fwrite(a->chave, sizeof(int), sizeof(a->chave) , out);
+	fwrite(&a->folha, sizeof(int), 1, out);
+	fwrite(a->filho, sizeof(int), sizeof(a->filho), out);
+	fwrite(a->pizza, sizeof(int), sizeof(a->pizza), out);
+	fwrite(&a->prox, sizeof(int), 1, out);
+}
+
+TABM *le_no(FILE *in){
+	TABM *a = (TABM *)malloc(sizeof(TABM));
+	if (0 >= fread(&a->nchaves, sizeof(int), 1, in)){
+		free(a);
+		return NULL;
+	}
+	fread(a->chave, sizeof(int), sizeof(a->chave) , in);
+	fread(&a->folha, sizeof(int), 1, in);
+	fread(a->filho, sizeof(int), sizeof(a->filho), in);
+	fread(a->pizza, sizeof(int), sizeof(a->pizza), in);
+	fread(&a->prox, sizeof(int), 1, in);
+	return a;
+}
+
+/* 
 void libera(TABM *a){
 	if (a){
 		if (!a->folha){
@@ -35,11 +59,12 @@ void libera(TABM *a){
 		free(a->chave);
 		free(a);
 	}
-}
+} */
 
-TP *busca_pizza(TABM *a, int cod){
-	if (!a)
-		return NULL;
+TP *busca_pizza(char* arvore, int cod){
+	FILE fpa = fopen(arvore, "rb");
+	if (!fpa)
+		exit(1);
 	int i = 0;
 	while ((i < a->nchaves) && (cod > a->chave[i]))
 		i++; //procura em qual chave a pizza deverá estar
