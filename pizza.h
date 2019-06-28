@@ -31,7 +31,7 @@ void salva_no(TABM *a, FILE *out);
 TABM *le_no(FILE *in);
 int tamanho_no(int t);
 void libera(TABM *a);
-TP *busca_pizza(TABM *a, int cod);
+int busca_pizza(TABM *a, int cod);
 void busca_categoria(TABM *a, char *categoria);
 void altera_pizza(TP* pizza, char *nome, char *categoria, float preco);
 void imprime(TABM *a, int andar);

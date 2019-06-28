@@ -68,27 +68,30 @@ void libera(TABM *a){
 	}
 } 
 */
-TP *busca_pizza(FILE *arvore, FILE *pizza, int cod){
+ int busca_pizza(FILE *arvore, int cod){
 	TABM *a = le_no(arvore);
 	int i = 0;
 	while ((i < a->nchaves) && (cod > a->chave[i]))
 		i++; //procura em qual chave a pizza deverá estar
 	if ((i < a->nchaves) && (a->folha) && (cod == a->chave[i])){ //caso o indice seja igual o codigo e seja uma folha retorna a pizza encontrada
-		fseek(pizza,a->pizza[i], SEEK_SET);
-		return le_pizza(pizza);
+		return a->pizza[i];
 	} 
 	if (a->folha)
 		return NULL; //se for uma folha e n atender a condição de cima, a pizza n está na arvore
 	if (a->chave[i] == cod)
 		i++; //caso o indice seja igual ao codigo, mas n seja uma folha, procura no filho da direita
 	fseek(arvore, a->filho[i], SEEK_SET)
-	return busca_pizza(arvore, pizza, cod);
+	return busca_pizza(arvore, cod);
 }
  
-void altera_pizza(TP* pizza, char *nome, char *categoria, float preco){
-	strcpy(pizza->categoria, categoria);
-	strcpy(pizza->nome, nome);
-	pizza->preco = preco;
+void altera_pizza(File *pizza, int end_pizza, char *nome, char *categoria, float preco){
+	fseek(pizza, end_pizza, SEEK_SET);
+	TP* p = le_pizza(pizza);
+	strcpy(p->categoria, categoria);
+	strcpy(p->nome, nome);
+	p->preco = preco;
+	fseek(pizza, end_pizza, SEEK_SET);
+	salva_pizza(p, pizza);
 	return;
 }
 
@@ -178,7 +181,7 @@ TABM *insere_nao_completo(TABM *a,TP *pizza, int t){
 	return a;
 }
 
-TABM *insere(TABM *a, TP *pizza, int t){
+TABM *insere(FILE *arvore, TP *pizza, int t){
 	TP *p = busca_pizza(a, pizza->cod);
 	if (p){
 		altera_pizza(p, pizza->nome, pizza->categoria, pizza->preco);
