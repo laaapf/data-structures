@@ -25,22 +25,25 @@ typedef struct arvbm{
   OBS: as funçoes abaixo comentadas foram feitas pela vanessa logo, estão funcionando.
 */
 
-TABM *cria(int t);
 TABM *inicializa(void);
+TABM *cria(int t);
+int salva_no(TABM *a, FILE *out);
+TABM *le_no(FILE *in);
+int tamanho_no(int t);
 void libera(TABM *a);
-TP *busca_pizza(TABM *a, int cod);
+int busca_pizza(FILE *arvore, int cod);
 void busca_categoria(TABM *a, char *categoria);
-void altera_pizza(TP* pizza, char *nome, char *categoria, float preco);
+void altera_pizza(FILE *pizza, int end_pizza, char *nome, char *categoria, float preco);
 void imprime(TABM *a, int andar);
-TABM *divisao(TABM *x, int i, TABM* y, int t);
-TABM *insere_nao_completo(TABM *a, TP* pizza, int t);
-TABM *insere(TABM *a, TP* pizza, int t);
+TABM *divisao(FILE *arvore, TABM *x, int i, TABM *y, int end_y, int t);
+void *insere_nao_completo(FILE *arvore, FILE * fpizza, TP *pizza, int t);
+void insere(FILE *arvore, FILE *fpizza , TP *pizza, int t);
 // Imprime pizza
 void imprime_pizza(TP *p);
 // Cria pizza
 TP *pizza(int cod, char *nome, char *categoria, float preco);
 // Salva pizza no arquivo out, na posicao atual do cursor
-void salva_pizza(TP *p, FILE *out);
+int salva_pizza(TP *p, FILE *out);
 // Le uma pizza do arquivo in na posicao atual do cursor
 // Retorna um ponteiro para pizza lida do arquivo
 TP *le_pizza(FILE *in);
