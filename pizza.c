@@ -1,25 +1,56 @@
 #include "pizza.h"
 
-TABM *cria(int t){
-	TABM *novo = (TABM *)malloc(sizeof(TABM));
-	novo->nchaves = 0;
-	novo->chave = (int *)malloc(sizeof(int) * ((t * 2) - 1));
-	novo->pizza = (TP **)malloc(sizeof(TP *) * ((t * 2) - 1));
-	novo->folha = 1;
-	novo->filho = (TABM **)malloc(sizeof(TABM *) * t * 2);
-	novo->prox = NULL;
-	int i;
-	for (i = 0; i < (t * 2); i++)
-		novo->filho[i] = NULL;
-	for (int i = 0; i < ((2 * t) - 1); i++)
-		novo->pizza[i] = NULL;
-	return novo;
-}
-
 TABM *inicializa(){
 	return NULL;
 }
 
+TABM *cria(int t){
+	TABM *novo = (TABM *)malloc(sizeof(TABM));
+	novo->nchaves = 0;
+	novo->chave[(2*t)-1];
+	novo->pizza[(2*t)-1];
+	novo->folha = 1;
+	novo->filho[2*t];
+	novo->prox = -1;
+	int i;
+	for (i = 0; i < (t * 2); i++)
+		novo->filho[i] = -1;
+	for (int i = 0; i < ((2 * t) - 1); i++)
+		novo->pizza[i] = -1;
+	return novo;
+}
+
+void salva_no(TABM *a, FILE *out){
+	fwrite(&a->nchaves, sizeof(int), 1, out);
+	fwrite(a->chave, sizeof(int), sizeof(a->chave) , out);
+	fwrite(&a->folha, sizeof(int), 1, out);
+	fwrite(a->filho, sizeof(int), sizeof(a->filho), out);
+	fwrite(a->pizza, sizeof(int), sizeof(a->pizza), out);
+	fwrite(&a->prox, sizeof(int), 1, out);
+}
+
+TABM *le_no(FILE *in){
+	TABM *a = (TABM *)malloc(sizeof(TABM));
+	if (0 >= fread(&a->nchaves, sizeof(int), 1, in)){
+		free(a);
+		return NULL;
+	}
+	fread(a->chave, sizeof(int), sizeof(a->chave) , in);
+	fread(&a->folha, sizeof(int), 1, in);
+	fread(a->filho, sizeof(int), sizeof(a->filho), in);
+	fread(a->pizza, sizeof(int), sizeof(a->pizza), in);
+	fread(&a->prox, sizeof(int), 1, in);
+	return a;
+}
+int tamanho_no(int t){
+	return 3*(sizeof(int)) +	   // nchaves, folha e prox
+		2*(sizeof(int) * ((2*t)-1)) + // chaves e pizzas
+		sizeof(int) * (2*t);// filhos
+}
+
+
+
+/*
 void libera(TABM *a){
 	if (a){
 		if (!a->folha){
@@ -35,21 +66,23 @@ void libera(TABM *a){
 		free(a->chave);
 		free(a);
 	}
-}
-
-TP *busca_pizza(TABM *a, int cod){
-	if (!a)
-		return NULL;
+} 
+*/
+TP *busca_pizza(FILE *arvore, FILE *pizza, int cod){
+	TABM *a = le_no(arvore);
 	int i = 0;
 	while ((i < a->nchaves) && (cod > a->chave[i]))
 		i++; //procura em qual chave a pizza deverá estar
-	if ((i < a->nchaves) && (a->folha) && (cod == a->chave[i]))
-		return a->pizza[i]; //caso o indice seja igual o codigo e seja uma folha retorna a pizza encontrada
+	if ((i < a->nchaves) && (a->folha) && (cod == a->chave[i])){ //caso o indice seja igual o codigo e seja uma folha retorna a pizza encontrada
+		fseek(pizza,a->pizza[i], SEEK_SET);
+		return le_pizza(pizza);
+	} 
 	if (a->folha)
 		return NULL; //se for uma folha e n atender a condição de cima, a pizza n está na arvore
 	if (a->chave[i] == cod)
 		i++; //caso o indice seja igual ao codigo, mas n seja uma folha, procura no filho da direita
-	return busca_pizza(a->filho[i], cod);
+	fseek(arvore, a->filho[i], SEEK_SET)
+	return busca_pizza(arvore, pizza, cod);
 }
  
 void altera_pizza(TP* pizza, char *nome, char *categoria, float preco){
@@ -59,34 +92,61 @@ void altera_pizza(TP* pizza, char *nome, char *categoria, float preco){
 	return;
 }
 
-void busca_categoria(TABM *a, char *categoria){
-	if(!a) return;
-	while(!a->folha){
-		a = a->filho[0];
+void busca_categoria(FILE *pizza, char *categoria){
+	long pos_cat = 0;
+	long pos_ini = 0;
+	char* cat_atual;
+	cat_atual = (char *) malloc(sizeof(char) * 20);
+	while(1){
+		pos_cat = pos_ini + sizeof(int) + sizeof(char) *50;
+		fseek(pizza,pos_cat,SEEK_SET);
+		int i = fread(cat_atual,sizeof(char)*20,1,pizza);
+		if(i<=0) break;
+		if(strcmp(cat_atual,categoria) == 0) {
+			fseek(pizza,pos_ini,SEEK_SET);
+			imprime_pizza(le_pizza(pizza));
+		}		
+		pos_ini += tamanho_pizza_bytes;
 	}
-	for (int i = 0; i < a->nchaves; i++){
-		if (strcmp(a->pizza[i]->categoria, categoria) == 0) imprime_pizza(a->pizza[i]);
-	}
-	busca_categoria(a->prox, categoria);
-	
-	
-
+	free(cat_atual);
 }
 
-void imprime(TABM *a, int andar){
-	if (a){
-		int i, j;
-		for (i = 0; i <= a->nchaves - 1; i++){
-			imprime(a->filho[i], andar + 1);
-			for (j = 0; j <= andar; j++)
-				printf("   ");
-			if (a->folha)
-				imprime_pizza(a->pizza[i]);
-			else
-				printf("%d\n", a->chave[i]);
-		}
-		imprime(a->filho[i], andar + 1);
+void remove_categoria(FILE *pizza, char *categoria){
+	long pos_cat = 0;
+	long pos_ini = 0;
+	char* cat_atual;
+	cat_atual = (char *) malloc(sizeof(char) * 20);
+	while(1){
+		pos_cat = pos_ini + sizeof(int) + sizeof(char) *50;
+		fseek(pizza,pos_cat,SEEK_SET);
+		int i = fread(cat_atual,sizeof(char)*20,1,pizza);
+		if(i<=0) break;
+		if(strcmp(cat_atual,categoria) == 0) {
+			int cod;
+			int i = fread(&cod,sizeof(int),1,arq);
+			//remove no cod
+		}		
+		pos_ini += tamanho_pizza_bytes;
 	}
+	free(cat_atual);
+}
+
+void imprime(FILE *arq, int andar){
+	a = le_no(arq);
+	if(a){
+		for(i = 0; i<=nchaves - 1; i++){
+			fseek(arq,a->filho[i],SEEK_SET);
+			imprime(arq,andar + 1);
+			for(j = 0; j<= andar; j++){
+				printf("    ");
+			}
+			if(folha) imprime_pizza_end(arq,a->pizza[i]);
+			else printf("%d\n",chaves[i]);
+		}
+		fseek(arq,a->filho[i],SEEK_SET);
+		imprime(arq,andar+1);
+	}
+	libera(a);
 }
 
 TABM *divisao(TABM *x, int i, TABM *y, int t){
@@ -175,6 +235,14 @@ void imprime_pizza(TP *p){
 	printf("%d, %s (%s), R$ %.2f\n", p->cod, p->nome, p->categoria, p->preco);
 }
 
+void imprime_pizza_end(FILE *pizza, long end){
+	fseek(pizza,end,SEEK_SET);
+	TP *p = NULL;
+	i = fread(p, tamanho_pizza_bytes, 1,pizza);
+	if(i>0) imprime_pizza(p);
+	free(p);
+}
+
 TP *pizza(int cod, char *nome, char *categoria, float preco){
 	TP *p = (TP *)malloc(sizeof(TP));
 	if (p)
@@ -245,12 +313,5 @@ int tamanho_pizza_bytes(){
 }
 
 int main(void){
-	TABM *arvore = inicializa();
-	/* int t;
-	char file[20];
-	scanf("%d %s", &t, file);
-	 */
-	le_dados("",2)
-	imprime(arvore,0);
-	free(arvore);
+	
 }

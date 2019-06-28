@@ -31,10 +31,11 @@ void libera(TABM *a);
 TP *busca_pizza(TABM *a, int cod);
 void busca_categoria(TABM *a, char *categoria);
 void altera_pizza(TP* pizza, char *nome, char *categoria, float preco);
-void imprime(TABM *a, int andar);
+void imprime(FILE *arq, int andar);
 TABM *divisao(TABM *x, int i, TABM* y, int t);
 TABM *insere_nao_completo(TABM *a, TP* pizza, int t);
 TABM *insere(TABM *a, TP* pizza, int t);
+void imprime_pizza_end(FILE *pizza, long end);
 // Imprime pizza
 void imprime_pizza(TP *p);
 // Cria pizza
