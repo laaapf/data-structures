@@ -111,6 +111,203 @@ void busca_categoria(FILE *pizza, FILE *arvore, char *categoria){
 	free(cat_atual);
 }
 
+TABM *buscaPai(FILE* arvore,int cod){
+	TABM *a = le_no(arvore);
+	if(!a){
+		return NULL;
+	} 
+	int i = 0;
+	while ((i < a->nchaves) && (cod >= a->chave[i]))
+		i++; //procura em qual chave a pizza deverá estar
+	fseek(arvore,a->filho[i],SEEK_SET);
+	TABM* filhoI = le_no(arvore);
+	if ((filhoI->folha)){
+        int j = 0;
+        while ((j < filhoI->nchaves) && (cod > filhoI->chave[j]))
+            j++;
+        if ((j < filhoI->nchaves) && (cod == filhoI->chave[j])){
+            int posfim = ftell(arvore);
+			posfim -= sizeof(TABM);
+			fseek(arvore,posfim,SEEK_SET);
+			return a;
+		}
+    }
+	if (a->folha)
+		return NULL; //se for uma folha e n atender a condição de cima, a pizza n está na arvore
+	if (a->chave[i] == cod)
+		i++; //caso o indice seja igual ao codigo, mas n seja uma folha, procura no filho da direita
+	fseek(arvore, a->filho[i], SEEK_SET);
+	libera(a);
+	libera(filhoI);
+	return buscaPai(arvore, cod);
+}
+
+TABM *removeCaso1(FILE* arvore, FILE*pizzas, TABM* a,int cod){
+	//o cursor do arquivo arvore deve ta no inicio da pizza a
+	int i = 0;
+    int achou = 0;
+    while (i < a->nchaves - 1){
+        if (cod == a->chave[i])
+            achou = 1;
+        if (achou){
+            a->chave[i] = a->chave[i + 1];
+        }
+        i++;
+    }
+    a->nchaves -= 1;
+	int pos_ini = salva_no(a,arvore);
+	//Falta tirar do arquivo de pizzas
+}
+void removea(FILE* arvore, FILE* pizzas, int cod, int t){
+	TABM* a = buscaPai(arvore,cod);
+	if(!a) printf("pizza não encontrada");
+	int i = 0;
+	int pospai = ftell(arvore);
+	while ((i < a->nchaves) && (cod >= a->chave[i]))
+        i++;
+	fseek(arvore,a->filho[i],SEEK_SET);
+	int posFilhoI = ftell(arvore);
+	TABM* filhoI = le_no(arvore); //filho[i]
+	if (filhoI->nchaves >= t){ //caso 1  i=2
+        printf("caso1");
+        filhoI = removeCaso1(arvore,pizzas,filhoI, cod);
+		fseek(arvore,posFilhoI,SEEK_SET);
+		salva_no(filhoI,arvore);
+		libera(a);
+		libera(filhoI);
+        return;
+    }
+	if (filhoI->nchaves == t - 1){
+		fseek(arvore,a->filho[i-1],SEEK_SET);
+		int posFilhoAntesI = ftell(arvore);
+		TABM* filhoAntesI = le_no(arvore);
+        if((i!=0)&&(filhoAntesI->nchaves >= t)){ //caso 2
+            printf("caso2");
+            int maior = filhoAntesI->chave[filhoAntesI->nchaves - 1];
+            filhoAntesI->nchaves -= 1;
+            filhoI = removeCaso1(arvore, pizzas, filhoI, cod);
+            int k = filhoI->nchaves;
+            while (k > 0){
+                filhoI->chave[k] = filhoI->chave[k - 1];
+                k--;
+            }
+            filhoI->chave[k] = maior;
+            filhoI->nchaves += 1;
+            a->chave[i - 1] = maior;
+			fseek(arvore,pospai,SEEK_SET);
+			pospai = salva_no(a,arvore);
+			fseek(arvore,posFilhoI,SEEK_SET);
+			posFilhoI = salva_no(filhoI,arvore);
+			fseek(arvore,posFilhoAntesI,SEEK_SET);
+			posFilhoAntesI = salva_no(filhoAntesI,arvore);
+			libera(a);
+			libera(filhoI);
+			libera(filhoAntesI);
+            return;
+        }
+		fseek(arvore,a->filho[i+1],SEEK_SET);
+		int posFilhoDepoisI = ftell(arvore);
+		TABM* filhoDepoisI = le_no(arvore);
+		if ((i!=(2*t))&&(filhoDepoisI->nchaves >= t)){ //caso 3
+            printf("caso3");
+            int menor = filhoDepoisI->chave[0];
+            filhoDepoisI = removeCaso1(arvore, pizzas, filhoDepoisI, menor);
+            int subir = filhoDepoisI->chave[0];
+            a->chave[i] = subir;
+            filhoI = removeCaso1(arvore, pizzas, filhoI, cod);
+            int k = filhoI->nchaves;
+            filhoI->chave[k] = menor;
+            filhoAntesI->nchaves += 1;
+			fseek(arvore,pospai,SEEK_SET);
+			pospai = salva_no(a,arvore);
+			fseek(arvore,posFilhoI,SEEK_SET);
+			posFilhoI = salva_no(filhoI,arvore);
+			fseek(arvore,posFilhoDepoisI,SEEK_SET);
+			posFilhoDepoisI = salva_no(filhoDepoisI,arvore);
+			libera(a);
+			libera(filhoI);
+			libera(filhoDepoisI);
+			libera(filhoAntesI);
+            return;
+        }else if (i != 0){ // caso 4
+            printf("caso4");
+            filhoI = removeCaso1(arvore, pizzas, filhoI, cod);
+            int x = filhoAntesI->nchaves; //posição no vetor esq
+            int b = 0;                        //posição no vetor que retirou o elemento
+            int y = filhoI->nchaves;     //tamanho do vetor que retirou o elemento
+            while (b < y){
+                filhoAntesI->chave[x] = filhoI->chave[b];
+                b++;
+                x++;
+            }
+            filhoI->nchaves = 0;
+            filhoAntesI->nchaves += y;
+            int k = a->nchaves;
+            int j = i - 1;
+            while (j < k - 1){
+                a->chave[j] = a->chave[j + 1];
+                a->filho[j + 1] = a->filho[j + 2];
+                j++;
+            }
+            a->nchaves--;
+            filhoAntesI->prox = a->filho[i];
+			fseek(arvore,pospai,SEEK_SET);
+			pospai = salva_no(a,arvore);
+			fseek(arvore,posFilhoI,SEEK_SET);
+			posFilhoI = salva_no(filhoI,arvore);
+			fseek(arvore,posFilhoAntesI,SEEK_SET);
+			posFilhoAntesI = salva_no(filhoAntesI,arvore);
+			libera(a);
+			libera(filhoI);
+			libera(filhoDepoisI);
+			libera(filhoAntesI);
+        }
+		else if (i != 2 * t) { //caso 5
+            printf("caso5");
+            filhoI = removeCaso1(arvore, pizzas, filhoI, cod);
+            int x = filhoDepoisI->nchaves; //posição no vetor dir
+            int b = 0;                        //posição no vetor que retirou o elemento
+            int y = filhoI->nchaves;     //tamanho do vetor que retirou o elemento
+            int z = filhoDepoisI->nchaves;
+            filhoDepoisI->nchaves += y;
+            while (b < z){
+                filhoDepoisI->chave[x] = filhoDepoisI->chave[x - 1];
+                x--;
+                b++;
+            }
+            b = 0;
+            while (b < y){
+                filhoDepoisI->chave[b] = filhoI->chave[b];
+                b++;
+            }
+            filhoI->nchaves = 0;
+            b = 0;
+            while (b < a->nchaves)
+            {
+                a->chave[b] = a->chave[b + 1];
+                a->filho[b] = a->filho[b + 1];
+                b++;
+            }
+            a->nchaves -= 1;
+			filhoAntesI->prox = a->filho[i];
+			fseek(arvore,pospai,SEEK_SET);
+			pospai = salva_no(a,arvore);
+			fseek(arvore,posFilhoI,SEEK_SET);
+			posFilhoI = salva_no(filhoI,arvore);
+			fseek(arvore,posFilhoAntesI,SEEK_SET);
+			posFilhoAntesI = salva_no(filhoAntesI,arvore);
+			fseek(arvore,posFilhoDepoisI,SEEK_SET);
+			posFilhoDepoisI = salva_no(filhoDepoisI,arvore);
+			libera(a);
+			libera(filhoI);
+			libera(filhoDepoisI);
+			libera(filhoAntesI);
+        }
+
+
+	}
+}
+
 void remove_categoria(FILE *pizza, FILE *arvore, char *categoria){
 	long pos_cat = 0;
 	long pos_ini = 0;
@@ -343,12 +540,15 @@ int main(void){
 	printf("Digite o fator de ramificação");
 	scanf("%i", &t);
 	FILE* pizzas = fopen("dados_iniciais.dat","rb+");
+	FILE* fpizzas = fopen("dados.dat","rb+");
 	FILE* arvore = fopen("arvore.dat","wb");
 	if(!arvore) exit(1);
 	if(!pizzas) exit(1);
+	if(!fpizzas) exit(1);
 	while(op != -1){
 		imprime(arvore, 0);
 		printf("Digite:\n\t0 para inserir uma pizza\n\t1 para remover uma pizza\n\t2 para buscar uma pizza com base no codigo\n\t3 para buscar todas as pizzas de uma categoria\n\t4 remover todas as pizzas de uma categoria\n\t-1 para sair\n");
+		printf("\t5 para inicializar o arquivo fpizzas\n\t6 para imprimir as pizzas de fpizzas\n");
 		scanf("%i", &op);
 		if(op == 0){
 			int cod;
@@ -364,7 +564,7 @@ int main(void){
 			printf("Digite o preço:");
 			scanf("%f",&preco);
 			TP *p = pizza(cod,nome,categoria,preco);
-			insere(arvore, pizzas, p, t);
+			insere(arvore, fpizzas, p, t);
 		}else if(op == 1){
 			int cod;
 			printf("Digite o codigo da pizza a ser removida:");
@@ -372,24 +572,45 @@ int main(void){
 			//chamar remove
 		}else if(op == 2){
 			int cod;
-			printf("Digite o codigo da pizza a ser removida:");
+			printf("Digite o codigo da pizza a ser buscada:");
 			scanf("%d",&cod);
 			int end = busca_pizza(arvore,cod);
-			imprime_pizza_end(pizzas,end);
+			imprime_pizza_end(fpizzas,end);
 		}else if(op == 3){
 			char* categoria = (char *) malloc(sizeof(char) * 20);;
 			printf("Digite a categoria a ser buscada:");
 			scanf("%s",categoria);
-			busca_categoria(pizzas,arvore,categoria);
+			busca_categoria(fpizzas,arvore,categoria);
 		}else if(op == 4){
 			char* categoria = (char *) malloc(sizeof(char) * 20);
-			printf("Digite a categoria a ser buscada:");
+			printf("Digite a categoria a ser removida:");
 			scanf("%s",categoria);
-			remove_categoria(pizzas,arvore,categoria);
+			remove_categoria(fpizzas,arvore,categoria);
+		}else if(op==5){
+			rewind(fpizzas);
+			rewind(pizzas);
+			while(1){
+				TP* p = le_pizza(pizzas);
+				if(!p) break;
+				printf("%d\n",p->cod);
+				insere(arvore,fpizzas,p,t);
+			}
+		}else if(op==6){
+			rewind(fpizzas);
+			while(1){
+				TP* p = le_pizza(fpizzas);
+				if(!p) break;
+				imprime_pizza(p);
+			}
+			imprime(arvore,0);
+
 		}else{
 			fclose(pizzas);
+			fclose(fpizzas);
 			fclose(arvore);
 		}
 	}
 	fclose(pizzas);
+	fclose(fpizzas);
+	fclose(arvore);
 }
