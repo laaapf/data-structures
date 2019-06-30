@@ -13,10 +13,12 @@ TABM *cria(int t){
 	novo->filho = (int *) malloc(sizeof(int)*(2*t));
 	novo->prox = -1;
 	int i;
-	for (i = 0; i < (t * 2); i++)
+	for (i = 0; i < (t * 2); i++){
 		novo->filho[i] = -1;
-	for (int i = 0; i < ((2 * t) - 1); i++)
+	}
+	for (int i = 0; i < ((2 * t) - 1); i++){
 		novo->pizza[i] = -1;
+	}
 	return novo;
 }
 
@@ -90,7 +92,7 @@ void altera_pizza(FILE *pizza, int end_pizza, char *nome, char *categoria, float
 	return;
 }
 
-void busca_categoria(FILE *pizza, char *categoria){
+void busca_categoria(FILE *pizza, FILE *arvore, char *categoria){
 	long pos_cat = 0;
 	long pos_ini = 0;
 	char* cat_atual;
@@ -104,12 +106,12 @@ void busca_categoria(FILE *pizza, char *categoria){
 			fseek(pizza,pos_ini,SEEK_SET);
 			imprime_pizza(le_pizza(pizza));
 		}		
-		pos_ini += tamanho_pizza_bytes();
+		pos_ini +=(long) tamanho_pizza_bytes();
 	}
 	free(cat_atual);
 }
 
-void remove_categoria(FILE *pizza, char *categoria){
+void remove_categoria(FILE *pizza, FILE *arvore, char *categoria){
 	long pos_cat = 0;
 	long pos_ini = 0;
 	char* cat_atual;
@@ -121,17 +123,17 @@ void remove_categoria(FILE *pizza, char *categoria){
 		if(i<=0) break;
 		if(strcmp(cat_atual,categoria) == 0) {
 			int cod;
-			int i = fread(&cod,sizeof(int),1,pizza);
+			int i = fread(&cod,sizeof(int),1,arvore);
 			//remove no cod
 		}		
-		pos_ini += tamanho_pizza_bytes();
+		pos_ini +=(long) tamanho_pizza_bytes();
 	}
 	free(cat_atual);
 }
 
 void imprime(FILE *arq, int andar){
-	TABM *a = le_no(arq);
-	int i;
+	TABM* a = le_no(arq);
+	int i, j;
 	if(a){
 		for(i = 0; i<=a->nchaves - 1; i++){
 			fseek(arq,a->filho[i],SEEK_SET);
@@ -335,18 +337,56 @@ int tamanho_pizza_bytes(){
 }
 
 int main(void){
-	TABM *a = cria(2);
-	FILE *farvore = fopen("arvore.dat", "rb+");
-	if(!farvore) exit(1);
-	FILE *fpizza = fopen("dados.dat", "rb+");
-	if(!fpizza) exit(1);
- 	 
-	for (int i = 0; i < 4; i++){
-		TP *p = pizza(i+1, "a", "a", i+1);
-		insere(farvore,fpizza, p, 2);
+	int op = 0;
+	int t;
+	printf("Digite o fator de ramificação");
+	scanf("%i", &t);
+	FILE* pizzas = fopen("dados_iniciais.dat","rb+");
+	FILE* arvore = fopen("arvore.dat","wb");
+	if(!arvore) exit(1);
+	if(!pizzas) exit(1);
+	while(op != -1){
+		printf("Digite:\n\t0 para inserir uma pizza\n\t1 para remover uma pizza\n\t2 para buscar uma pizza com base no codigo\n\t3 para buscar todas as pizzas de uma categoria\n\t4 remover todas as pizzas de uma categoria\n\t-1 para sair\n");
+		scanf("%i", &op);
+		if(op == 0){
+			int cod;
+			char *nome = (char *) malloc(sizeof(char) * 50);
+			char* categoria = (char *) malloc(sizeof(char) * 20);;
+			float preco;
+			printf("Digite o codigo:");
+			scanf("%d",&cod);
+			printf("Digite o nome:");
+			scanf("%s",nome);
+			printf("Digite a categoria:");
+			scanf("%s",categoria);
+			printf("Digite o preço:");
+			scanf("%f",&preco);
+			TP *p = pizza(cod,nome,categoria,preco);
+		}else if(op == 1){
+			int cod;
+			printf("Digite o codigo da pizza a ser removida:");
+			scanf("%d",&cod);
+			//chamar remove
+		}else if(op == 2){
+			int cod;
+			printf("Digite o codigo da pizza a ser removida:");
+			scanf("%d",&cod);
+			int end = busca_pizza(arvore,cod);
+			imprime_pizza_end(pizzas,end);
+		}else if(op == 3){
+			char* categoria = (char *) malloc(sizeof(char) * 20);;
+			printf("Digite a categoria a ser buscada:");
+			scanf("%s",categoria);
+			busca_categoria(pizzas,arvore,categoria);
+		}else if(op == 4){
+			char* categoria = (char *) malloc(sizeof(char) * 20);
+			printf("Digite a categoria a ser buscada:");
+			scanf("%s",categoria);
+			remove_categoria(pizzas,arvore,categoria);
+		}else{
+			fclose(pizzas);
+			fclose(arvore);
+		}
 	}
-
-	imprime(farvore, 0);
-	
-
+	fclose(pizzas);
 }
