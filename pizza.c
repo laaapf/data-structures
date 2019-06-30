@@ -125,6 +125,8 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
         filhoI = removeCaso1(a->filho[i], mat);
 		fseek(arvore,posFilhoI,SEEK_SET);
 		salva_no(filhoI,arvore);
+		libera(a);
+		libera(filhoI);
         return;
     }
 	if (filhoI->nchaves == t - 1){
@@ -150,7 +152,9 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 			posFilhoI = salva_no(filhoI,arvore);
 			fseek(arvore,posFilhoAntesI,SEEK_SET);
 			posFilhoAntesI = salva_no(filhoAntesI,arvore);
-			//liberar os TBM*
+			libera(a);
+			libera(filhoI);
+			libera(filhoAntesI);
             return;
         }
 		fseek(arvore,a->filho[i+1],SEEK_SET);
@@ -172,7 +176,10 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 			posFilhoI = salva_no(filhoI,arvore);
 			fseek(arvore,posFilhoDepoisI,SEEK_SET);
 			posFilhoDepoisI = salva_no(filhoDepoisI,arvore);
-			//liberar os TBM*
+			libera(a);
+			libera(filhoI);
+			libera(filhoDepoisI);
+			libera(filhoAntesI);
             return;
         }else if (i != 0){ // caso 4
             printf("caso4");
@@ -202,7 +209,10 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 			posFilhoI = salva_no(filhoI,arvore);
 			fseek(arvore,posFilhoAntesI,SEEK_SET);
 			posFilhoAntesI = salva_no(filhoAntesI,arvore);
-			//liberar os TBM*
+			libera(a);
+			libera(filhoI);
+			libera(filhoDepoisI);
+			libera(filhoAntesI);
         }
 		else if (i != 2 * t) { //caso 5
             printf("caso5");
@@ -240,7 +250,10 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 			posFilhoAntesI = salva_no(filhoAntesI,arvore);
 			fseek(arvore,posFilhoDepoisI,SEEK_SET);
 			posFilhoDepoisI = salva_no(filhoDepoisI,arvore);
-			//liberar os TBM*
+			libera(a);
+			libera(filhoI);
+			libera(filhoDepoisI);
+			libera(filhoAntesI);
         }
 }
 
