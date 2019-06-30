@@ -540,12 +540,15 @@ int main(void){
 	printf("Digite o fator de ramificação");
 	scanf("%i", &t);
 	FILE* pizzas = fopen("dados_iniciais.dat","rb+");
+	FILE* fpizzas = fopen("dados.dat","rb+");
 	FILE* arvore = fopen("arvore.dat","wb");
 	if(!arvore) exit(1);
 	if(!pizzas) exit(1);
+	if(!fpizzas) exit(1);
 	while(op != -1){
 		imprime(arvore, 0);
 		printf("Digite:\n\t0 para inserir uma pizza\n\t1 para remover uma pizza\n\t2 para buscar uma pizza com base no codigo\n\t3 para buscar todas as pizzas de uma categoria\n\t4 remover todas as pizzas de uma categoria\n\t-1 para sair\n");
+		printf("\t5 para inicializar o arquivo fpizzas\n\t6 para imprimir as pizzas de fpizzas\n");
 		scanf("%i", &op);
 		if(op == 0){
 			int cod;
@@ -561,7 +564,7 @@ int main(void){
 			printf("Digite o preço:");
 			scanf("%f",&preco);
 			TP *p = pizza(cod,nome,categoria,preco);
-			insere(arvore, pizzas, p, t);
+			insere(arvore, fpizzas, p, t);
 		}else if(op == 1){
 			int cod;
 			printf("Digite o codigo da pizza a ser removida:");
@@ -572,21 +575,42 @@ int main(void){
 			printf("Digite o codigo da pizza a ser buscada:");
 			scanf("%d",&cod);
 			int end = busca_pizza(arvore,cod);
-			imprime_pizza_end(pizzas,end);
+			imprime_pizza_end(fpizzas,end);
 		}else if(op == 3){
 			char* categoria = (char *) malloc(sizeof(char) * 20);;
 			printf("Digite a categoria a ser buscada:");
 			scanf("%s",categoria);
-			busca_categoria(pizzas,arvore,categoria);
+			busca_categoria(fpizzas,arvore,categoria);
 		}else if(op == 4){
 			char* categoria = (char *) malloc(sizeof(char) * 20);
 			printf("Digite a categoria a ser removida:");
 			scanf("%s",categoria);
-			remove_categoria(pizzas,arvore,categoria);
+			remove_categoria(fpizzas,arvore,categoria);
+		}else if(op==5){
+			rewind(fpizzas);
+			rewind(pizzas);
+			while(1){
+				TP* p = le_pizza(pizzas);
+				if(!p) break;
+				printf("%d\n",p->cod);
+				insere(arvore,fpizzas,p,t);
+			}
+		}else if(op==6){
+			rewind(fpizzas);
+			while(1){
+				TP* p = le_pizza(fpizzas);
+				if(!p) break;
+				imprime_pizza(p);
+			}
+			imprime(arvore,0);
+
 		}else{
 			fclose(pizzas);
+			fclose(fpizzas);
 			fclose(arvore);
 		}
 	}
 	fclose(pizzas);
+	fclose(fpizzas);
+	fclose(arvore);
 }
