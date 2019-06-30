@@ -34,7 +34,7 @@ int salva_no(TABM *a, FILE *out){
 }
 
 TABM *le_no(FILE *in){
-	TABM *a = cria(2);
+	TABM *a = cria(2); 
 	if (0 >= fread(&a->nchaves, sizeof(int), 1, in)){
 		free(a);
 		return NULL;
@@ -67,7 +67,7 @@ int busca_pizza(FILE *arvore, int cod){
 		return -1;
 	} 
 	int i = 0;
-	while ((i < a->nchaves) && (cod > a->chave[i]))
+	while ((i < a->nchaves) && (cod >= a->chave[i]))
 		i++; //procura em qual chave a pizza deverá estar
 	if ((i < a->nchaves) && (a->folha) && (cod == a->chave[i])){ //caso o indice seja igual o codigo e seja uma folha retorna a pizza encontrada
 		return a->pizza[i];
@@ -132,6 +132,7 @@ void remove_categoria(FILE *pizza, FILE *arvore, char *categoria){
 }
 
 void imprime(FILE *arq, int andar){
+	rewind(arq);
 	TABM* a = le_no(arq);
 	int i, j;
 	if(a){
@@ -346,6 +347,7 @@ int main(void){
 	if(!arvore) exit(1);
 	if(!pizzas) exit(1);
 	while(op != -1){
+		imprime(arvore, 0);
 		printf("Digite:\n\t0 para inserir uma pizza\n\t1 para remover uma pizza\n\t2 para buscar uma pizza com base no codigo\n\t3 para buscar todas as pizzas de uma categoria\n\t4 remover todas as pizzas de uma categoria\n\t-1 para sair\n");
 		scanf("%i", &op);
 		if(op == 0){
@@ -362,6 +364,7 @@ int main(void){
 			printf("Digite o preço:");
 			scanf("%f",&preco);
 			TP *p = pizza(cod,nome,categoria,preco);
+			insere(arvore, pizzas, p, t);
 		}else if(op == 1){
 			int cod;
 			printf("Digite o codigo da pizza a ser removida:");
