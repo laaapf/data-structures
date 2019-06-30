@@ -267,7 +267,7 @@ void removea(TA *arvore, int mat, int t)
                 j++;
             }
             a->nchaves--;
-            a->filho[i]->prox = a->filho[i + 1];
+            a->filho[i-1]->prox = a->filho[i];
         }
         else if (i != 2 * t) 
         { //caso 5
@@ -299,6 +299,7 @@ void removea(TA *arvore, int mat, int t)
                 b++;
             }
             a->nchaves -= 1;
+            a->filho[i-1]->prox = a->filho[i];
         }
     }
     return;
