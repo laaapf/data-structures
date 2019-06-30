@@ -32,12 +32,12 @@ TABM *le_no(FILE *in);
 int tamanho_no(int t);
 void libera(TABM *a);
 int busca_pizza(FILE *arvore, int cod);
-void busca_categoria(TABM *a, char *categoria);
+void busca_categoria(FILE *pizza, char *categoria);
 void imprime(FILE *arq, int andar);
 void imprime_pizza_end(FILE *pizza, long end);
 void altera_pizza(FILE *pizza, int end_pizza, char *nome, char *categoria, float preco);
 TABM *divisao(FILE *arvore, TABM *x, int i, TABM *y, int end_y, int t);
-void *insere_nao_completo(FILE *arvore, FILE * fpizza, TP *pizza, int t);
+void insere_nao_completo(FILE *arvore, FILE * fpizza, TP *pizza, int t);
 void insere(FILE *arvore, FILE *fpizza , TP *pizza, int t);
 // Imprime pizza
 void imprime_pizza(TP *p);
