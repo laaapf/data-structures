@@ -201,7 +201,8 @@ TA *removeCaso1(TA *a, int mat)
 }
 
 void removea(TA *arvore, int mat, int t)
-{
+{   
+    printf("\nRemove %d\n",mat);
     TA *a = buscaPai(arvore, mat);
     int i = 0;
     while ((i < a->nchaves) && (mat >= a->chave[i]))
@@ -299,7 +300,7 @@ void removea(TA *arvore, int mat, int t)
                 b++;
             }
             a->nchaves -= 1;
-            a->filho[i-1]->prox = a->filho[i];
+            if(i>0) a->filho[i-1]->prox = a->filho[i]; // se for o filho 0 n precisa ajeitar o encadeamento
         }
     }
     return;
@@ -317,28 +318,28 @@ int main(void)
     removea(a, 3, 3);
     printf("\n");
     imprime(a, 0);
-    removea(a, 1, 3);
+    removea(a, 6, 3);
     printf("\n");
     imprime(a, 0);
-    removea(a, 12, 3);
-    printf("\n"); 
-    imprime(a, 0);
-    a=insere(a, 13, 3);
-    printf("\n"); 
-    imprime(a, 0);
-    removea(a, 21, 3);
-    printf("\n");
-    imprime(a, 0);
-    removea(a, 18, 3);
-    printf("\n");
-    imprime(a, 0);
-    removea(a, 15, 3);
-    printf("\n"); 
-    imprime(a, 0);
-    a=insere(a, 20, 3);
-    printf("\n");
-    imprime(a, 0);
-    removea(a, 13, 3);
-    printf("\n");    
-    imprime(a, 0);
+    // removea(a, 12, 3);
+    // printf("\n"); 
+    // imprime(a, 0);
+    // a=insere(a, 13, 3);
+    // printf("\n"); 
+    // imprime(a, 0);
+    // removea(a, 21, 3);
+    // printf("\n");
+    // imprime(a, 0);
+    // removea(a, 18, 3);
+    // printf("\n");
+    // imprime(a, 0);
+    // removea(a, 15, 3);
+    // printf("\n"); 
+    // imprime(a, 0);
+    // a=insere(a, 20, 3);
+    // printf("\n");
+    // imprime(a, 0);
+    // removea(a, 13, 3);
+    // printf("\n");    
+    // imprime(a, 0);
 }
