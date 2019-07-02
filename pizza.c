@@ -687,6 +687,11 @@ int main(void){
 				p = le_pizza(inicial);
 				insere(arvore, pizzas, p, t);
 			}
+			// p = le_pizza(inicial);
+			// while(p){
+			// 	insere(arvore, pizzas, p, t);
+			// 	p = le_pizza(inicial);
+			// }
 			free(p);
 			rewind(pizzas);
 			rewind(arvore);
