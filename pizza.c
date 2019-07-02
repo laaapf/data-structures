@@ -164,6 +164,30 @@ TABM *buscaPai(FILE* arvore,int cod, int t){
 	return buscaPai(arvore, cod, t);
 }
 
+void diminuiPizzas(FILE* pizzas, int posFim){
+	FILE* temp = fopen("temporario.dat","wb+");
+	rewind(pizzas);
+	TP* p = le_pizza(pizzas);
+	while(ftell(pizzas) != posFim){
+		salva_pizza(p,temp);
+		p = le_pizza(pizzas);
+	}
+	salva_pizza(p,temp);
+
+	fclose(pizzas);
+	pizzas = fopen("arvore.dat", "wb+");
+
+	rewind(temp);
+	p = le_pizza(temp);
+	while(p){
+		salva_pizza(p,pizzas);
+		p = le_pizza(temp);
+	}
+	fclose(temp);
+	free(p);
+	free(temp);
+}
+
 TABM *removeCaso1(FILE* arvore, FILE*pizzas, TABM* a, int cod, int t){
 	//o cursor do arquivo arvore deve ta no inicio da pizza a
 	int i = 0;
@@ -173,6 +197,7 @@ TABM *removeCaso1(FILE* arvore, FILE*pizzas, TABM* a, int cod, int t){
             achou = 1;
         if (achou){
             a->chave[i] = a->chave[i + 1];
+			a->pizza[i] = a->pizza[i + 1];
         }
         i++;
     }
@@ -191,7 +216,6 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 	fseek(arvore,a->filho[i],SEEK_SET);
 	int posFilhoI = ftell(arvore);
 	TABM* filhoI = le_no(arvore, t); //filho[i]
-	//removeArq(pizzas,arvore,cod,t);
 	if (filhoI->nchaves >= t){ //caso 1  i=2
         printf("caso1");
         filhoI = removeCaso1(arvore,pizzas,filhoI, cod, t);
@@ -208,14 +232,17 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
         if((i!=0)&&(filhoAntesI->nchaves >= t)){ //caso 2
             printf("caso2");
             int maior = filhoAntesI->chave[filhoAntesI->nchaves - 1];
+			int maiorEnd = filhoAntesI->pizza[filhoAntesI->nchaves - 1];
             filhoAntesI->nchaves -= 1;
             filhoI = removeCaso1(arvore, pizzas, filhoI, cod, t);
             int k = filhoI->nchaves;
             while (k > 0){
                 filhoI->chave[k] = filhoI->chave[k - 1];
+                filhoI->pizza[k] = filhoI->pizza[k - 1];
                 k--;
             }
             filhoI->chave[k] = maior;
+            filhoI->pizza[k] = maiorEnd;
             filhoI->nchaves += 1;
             a->chave[i - 1] = maior;
 			fseek(arvore,pospai,SEEK_SET);
@@ -235,12 +262,14 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 		if ((i!=(2*t))&&(filhoDepoisI->nchaves >= t)){ //caso 3
             printf("caso3");
             int menor = filhoDepoisI->chave[0];
+			int menorEnd = filhoDepoisI->pizza[0]; //
             filhoDepoisI = removeCaso1(arvore, pizzas, filhoDepoisI, menor, t);
             int subir = filhoDepoisI->chave[0];
             a->chave[i] = subir;
             filhoI = removeCaso1(arvore, pizzas, filhoI, cod, t);
             int k = filhoI->nchaves;
             filhoI->chave[k] = menor;
+			filhoI->pizza[k] = menorEnd;
             filhoI->nchaves += 1;
 			fseek(arvore,pospai,SEEK_SET);
 			pospai = salva_no(a,arvore,t);
@@ -261,6 +290,7 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
             int y = filhoI->nchaves;     //tamanho do vetor que retirou o elemento
             while (b < y){
                 filhoAntesI->chave[x] = filhoI->chave[b];
+                filhoAntesI->pizza[x] = filhoI->pizza[b];
                 b++;
                 x++;
             }
@@ -296,12 +326,14 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
             filhoDepoisI->nchaves += y;
             while (b < z){ //and y>0
                 filhoDepoisI->chave[x] = filhoDepoisI->chave[x - 1];
+                filhoDepoisI->pizza[x] = filhoDepoisI->pizza[x - 1];
                 x--;
                 b++;
             }
             b = 0;
             while (b < y){
                 filhoDepoisI->chave[b] = filhoI->chave[b];
+                filhoDepoisI->pizza[b] = filhoI->pizza[b];
                 b++;
             }
             filhoI->nchaves = 0;
@@ -337,7 +369,7 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 void removeArq(FILE* pizzas, FILE* arvore, int cod, int t){
 	fseek(pizzas,0l,SEEK_END);
 	int posFim = ftell(pizzas) - tamanho_pizza_bytes();
-	fseek(pizzas,0l,SEEK_SET);
+	fseek(pizzas,posFim,SEEK_SET);
 	TP* ultPizza = le_pizza(pizzas);
 	if(ultPizza->cod != cod){
 		rewind(pizzas);
@@ -355,29 +387,26 @@ void removeArq(FILE* pizzas, FILE* arvore, int cod, int t){
 		fwrite(ultPizza->nome, sizeof(char), sizeof(ultPizza->nome), pizzas);
 		fwrite(ultPizza->categoria, sizeof(char), sizeof(ultPizza->categoria), pizzas);
 		fwrite(&ultPizza->preco, sizeof(float), 1, pizzas);
-		alteraEnderecoPizza(arvore,cod,t,posPizza);
+		rewind(arvore);
+		alteraEnderecoPizza(arvore,ultPizza->cod,t,posPizza);
 	}
-	//int k = ftruncate(pizzas, posFim);
+	//diminuiPizzas(pizzas,posFim);
+	int k = ftruncate(fileno(pizzas),posFim);
 }
 
-void remove_categoria(FILE *pizza, FILE *arvore, char *categoria){
+void remove_categoria(FILE *pizza, FILE *arvore, char *categoria, int t){
+	rewind(pizza);
 	long pos_cat = 0;
 	long pos_ini = 0;
-	char* cat_atual;
-	cat_atual = (char *) malloc(sizeof(char) * 20);
 	while(1){
-		pos_cat = pos_ini + sizeof(int) + sizeof(char) *50;
-		fseek(pizza,pos_cat,SEEK_SET);
-		int i = fread(cat_atual,sizeof(char)*20,1,pizza);
-		if(i<=0) break;
-		if(strcmp(cat_atual,categoria) == 0) {
-			int cod;
-			int i = fread(&cod,sizeof(int),1,arvore);
-			//remove no cod
+		TP* p = le_pizza(pizza);
+		if(!p) break;
+		if(strcmp(categoria,p->categoria) == 0) {
+			removea(arvore,pizza,p->cod,t);
+	 		removeArq(pizza,arvore,p->cod,t);
 		}		
 		pos_ini +=(long) tamanho_pizza_bytes();
 	}
-	free(cat_atual);
 }
 
 void imprime(FILE *arq, int andar, int t){
@@ -592,8 +621,9 @@ int main(void){
 	if(!arvore) exit(1);
 	if(!pizzas) exit(1);
 	while(op != -1){
-		printf("Digite:\n\t0 para inserir uma pizza\n\t1 para remover uma pizza\n\t2 para buscar uma pizza com base no codigo\n\t3 para buscar todas as pizzas de uma categoria\n\t4 remover todas as pizzas de uma categoria\n\t-1 para sair\n");
+		printf("Digite:\n\t-1 para sair\n\t0 para inserir uma pizza\n\t1 para remover uma pizza\n\t2 para buscar uma pizza com base no codigo\n\t3 para buscar todas as pizzas de uma categoria\n\t4 remover todas as pizzas de uma categoria\n");
 		printf("\t5 para inicializar o arquivo fpizzas\n\t6 para imprimir as pizzas de fpizzas\n");
+		printf("\t7 rewind o arquivo pizzas\n\t8 inicializa o arquivo de pizzas com um número de pizzas do arquivo inicial\n\t9 Imprime a arvore e o arquivo de pizzas\n");
 		scanf("%i", &op);
 		if(op == 0){
 			int cod;
@@ -615,13 +645,14 @@ int main(void){
 			printf("Digite o codigo da pizza a ser removida:");
 			scanf("%d",&cod);
 			removea(arvore,pizzas,cod,t);
+			removeArq(pizzas,arvore,cod,t);
 		}else if(op == 2){
 			int cod;
 			printf("Digite o codigo da pizza a ser buscada:");
 			scanf("%d",&cod);
 			rewind(arvore);
 			int end = busca_pizza(arvore,cod, t);
-			imprime_pizza_end(pizzas,end);
+			if(end != -1) imprime_pizza_end(pizzas,end);
 		}else if(op == 3){
 			char* categoria = (char *) malloc(sizeof(char) * 20);;
 			printf("Digite a categoria a ser buscada:");
@@ -631,7 +662,7 @@ int main(void){
 			char* categoria = (char *) malloc(sizeof(char) * 20);
 			printf("Digite a categoria a ser removida:");
 			scanf("%s",categoria);
-			remove_categoria(pizzas,arvore,categoria);
+			remove_categoria(pizzas,arvore,categoria,t);
 		}else if(op==5){
 			rewind(inicial);
 			int i = 0;
@@ -639,13 +670,6 @@ int main(void){
 			arvore = fopen("arvore.dat", "wb+");
 			fclose(pizzas);
 			pizzas = fopen("pizzas.dat", "wb+");
-			// TP *p = le_pizza(inicial);
-			// while (i<6){
-			// 	insere(arvore, pizzas, p, t);
-			// 	p = le_pizza(inicial);
-			// 	i++;
-			// }
-			// free(p);
 			
 		}else if(op==6){
 			rewind(pizzas);
@@ -654,8 +678,6 @@ int main(void){
 				if(!p) break;
 				imprime_pizza(p);
 			}
-			//rewind(arvore);
-			//imprime(arvore,0, t);
 
 		}else if(op==7){
 			rewind(pizzas);	
@@ -754,16 +776,7 @@ int main(void){
 				p = le_pizza(pizzas);
 			}
 			free(p);
-		}else if(op == 10){
-			fseek(pizzas,0l,SEEK_END);
-			int posFim = ftell(pizzas);
-			posFim -= tamanho_pizza_bytes();
-			ftruncate(fileno(pizzas),posFim);
 		}
-		// else{
-		// 	fclose(pizzas);
-		// 	fclose(arvore);
-		// }
 	}
 	fclose(pizzas);
 	fclose(arvore);

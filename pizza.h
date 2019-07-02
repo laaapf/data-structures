@@ -29,6 +29,7 @@ typedef struct arvbm{
 
 void removeArq(FILE* pizzas, FILE* arvore, int cod, int t);
 void alteraEnderecoPizza(FILE *arvore, int cod, int t, int novoEnd);
+void diminuiPizzas(FILE* pizzas, int posFim);
 TABM *inicializa(void);
 TABM *cria(int t);
 int salva_no(TABM *a, FILE *out, int t);
@@ -40,7 +41,7 @@ void busca_categoria(FILE *pizza, FILE* arvore, char *categoria);
 void removea(FILE* arvore, FILE* pizzas, int cod, int t);
 TABM *buscaPai(FILE* arvore,int cod, int t);
 TABM *removeCaso1(FILE* arvore, FILE*pizzas, TABM* a, int cod, int t);
-void remove_categoria(FILE *pizza, FILE* arvore, char *categoria);
+void remove_categoria(FILE *pizza, FILE* arvore, char *categoria, int t);
 void imprime(FILE *arq, int andar, int t);
 void imprime_pizza_end(FILE *pizza, long end);
 void altera_pizza(FILE *pizza, int end_pizza, char *nome, char *categoria, float preco);
