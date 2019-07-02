@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 typedef struct pz{
     int cod;
@@ -25,6 +27,8 @@ typedef struct arvbm{
   OBS: as funçoes abaixo comentadas foram feitas pela vanessa logo, estão funcionando.
 */
 
+void removeArq(FILE* pizzas, FILE* arvore, int cod, int t);
+void alteraEnderecoPizza(FILE *arvore, int cod, int t, int novoEnd);
 TABM *inicializa(void);
 TABM *cria(int t);
 int salva_no(TABM *a, FILE *out, int t);

@@ -80,6 +80,29 @@ int busca_pizza(FILE *arvore, int cod, int t){
 	libera(a);
 	return busca_pizza(arvore, cod, t);
 }
+
+void alteraEnderecoPizza(FILE *arvore, int cod, int t, int novoEnd){
+	int posInicial = ftell(arvore);
+	TABM *a = le_no(arvore, t);
+	if(!a){
+		return;
+	} 
+	int i = 0;
+	while ((i < a->nchaves) && (cod > a->chave[i]))
+		i++; //procura em qual chave a pizza deverá estar
+	if ((i < a->nchaves) && (a->folha) && (cod == a->chave[i])){ //caso o indice seja igual o codigo e seja uma folha retorna a pizza encontrada
+		a->pizza[i] = novoEnd;
+		fseek(arvore,posInicial,SEEK_SET);
+		int k = salva_no(a,arvore,t); //ver se posInicial == k se n deu erro
+	} 
+	if (a->folha)
+		return; //se for uma folha e n atender a condição de cima, a pizza n está na arvore
+	if (a->chave[i] == cod)
+		i++; //caso o indice seja igual ao codigo, mas n seja uma folha, procura no filho da direita
+	fseek(arvore, a->filho[i], SEEK_SET);
+	libera(a);
+	return alteraEnderecoPizza(arvore, cod, t, novoEnd);
+}
  
 void altera_pizza(FILE *pizza, int end_pizza, char *nome, char *categoria, float preco){
 	fseek(pizza, end_pizza, SEEK_SET);
@@ -168,6 +191,7 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 	fseek(arvore,a->filho[i],SEEK_SET);
 	int posFilhoI = ftell(arvore);
 	TABM* filhoI = le_no(arvore, t); //filho[i]
+	//removeArq(pizzas,arvore,cod,t);
 	if (filhoI->nchaves >= t){ //caso 1  i=2
         printf("caso1");
         filhoI = removeCaso1(arvore,pizzas,filhoI, cod, t);
@@ -308,6 +332,32 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 
 
 	}
+}
+
+void removeArq(FILE* pizzas, FILE* arvore, int cod, int t){
+	fseek(pizzas,0l,SEEK_END);
+	int posFim = ftell(pizzas) - tamanho_pizza_bytes();
+	fseek(pizzas,0l,SEEK_SET);
+	TP* ultPizza = le_pizza(pizzas);
+	if(ultPizza->cod != cod){
+		rewind(pizzas);
+		int posPizza = ftell(pizzas);
+		TP* p = le_pizza(pizzas);
+		while(p){
+			if(p->cod == cod){
+				break;
+			}
+			posPizza = ftell(pizzas);
+			p = le_pizza(pizzas);
+		}
+		fseek(pizzas,posPizza,SEEK_SET); //escrevendo a pizza no arquivo de pizzas
+		fwrite(&ultPizza->cod, sizeof(int), 1, pizzas);
+		fwrite(ultPizza->nome, sizeof(char), sizeof(ultPizza->nome), pizzas);
+		fwrite(ultPizza->categoria, sizeof(char), sizeof(ultPizza->categoria), pizzas);
+		fwrite(&ultPizza->preco, sizeof(float), 1, pizzas);
+		alteraEnderecoPizza(arvore,cod,t,posPizza);
+	}
+	//int k = ftruncate(pizzas, posFim);
 }
 
 void remove_categoria(FILE *pizza, FILE *arvore, char *categoria){
