@@ -709,7 +709,7 @@ int main(void){
 				p = le_pizza(pizzas);
 			}
 			free(p);
-		}else if(9){
+		}else if(op == 9){
 			TP* p;
 			rewind(pizzas);
 			rewind(arvore);
@@ -754,8 +754,11 @@ int main(void){
 				p = le_pizza(pizzas);
 			}
 			free(p);
-		}else if(10){
-
+		}else if(op == 10){
+			fseek(pizzas,0l,SEEK_END);
+			int posFim = ftell(pizzas);
+			posFim -= tamanho_pizza_bytes();
+			ftruncate(fileno(pizzas),posFim);
 		}
 		// else{
 		// 	fclose(pizzas);
