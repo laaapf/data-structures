@@ -14,18 +14,9 @@ typedef struct pz{
 typedef struct arvbm{
   int nchaves, folha, *chave, *pizza, *filho, prox;
 }TABM;
-/* 
-  A estrutura de arvore possui as seguintes informações:
-    nchaves: armazena o numero de chaves preenchidas no vetor;
-    folha: se a arvore é uma folha ou não;
-    vetor de chaves: as chaves da arvore q vão ser usadas pra fazer o controle dos limites de cada nó;
-    vetor de pizzas: caso seja uma folha o endereço da respectiva pizza no arquivo de pizzas;
-    vetor de filhos: caso não seja folha o endereço, para o mesmo arquivo da arvore, do filho daquela posição;
-    prox: caso seja uma folha o endereço da proxima pizza dentro do arquivo de pizzas
 
-
-  OBS: as funçoes abaixo comentadas foram feitas pela vanessa logo, estão funcionando.
-*/
+//Função de insere n trata se o código já é existente
+//Função remove deixando o pai com nchaves = 0 no caso 4
 
 void removeArq(FILE* pizzas, FILE* arvore, int cod, int t);
 void alteraEnderecoPizza(FILE *arvore, int cod, int t, int novoEnd);
