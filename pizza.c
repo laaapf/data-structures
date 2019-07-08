@@ -396,7 +396,6 @@ void removeArq(FILE* pizzas, FILE* arvore, int cod, int t){
 
 void remove_categoria(FILE *pizza, FILE *arvore, char *categoria, int t){
 	rewind(pizza);
-	long pos_cat = 0;
 	long pos_ini = 0;
 	while(1){
 		TP* p = le_pizza(pizza);
@@ -407,6 +406,16 @@ void remove_categoria(FILE *pizza, FILE *arvore, char *categoria, int t){
 		}		
 		pos_ini +=(long) tamanho_pizza_bytes();
 	}
+	rewind(pizza);
+	while (1){
+		TP* p = le_pizza(pizza);
+		if(!p) break;
+		if(strcmp(categoria,p->categoria) == 0) {
+			remove_categoria(pizza,arvore,categoria,t);
+			break;
+		}	
+	}
+	
 }
 
 void imprime(FILE *arq, int andar, int t){
@@ -414,14 +423,18 @@ void imprime(FILE *arq, int andar, int t){
 	if(a){
 		int i, j;
 		for(i = 0; i<=a->nchaves - 1; i++){
-			fseek(arq,a->filho[i],SEEK_SET);
-			imprime(arq,andar + 1, t);
+			if(a->filho[i] != -1) {
+				fseek(arq,a->filho[i],SEEK_SET);
+				imprime(arq,andar + 1, t);
+			}
 			for (j = 0; j <= andar; j++)
                 printf("   ");
             printf("%d\n", a->chave[i]);
         }
-		fseek(arq,a->filho[i],SEEK_SET);
-		imprime(arq,andar+1, t);
+		if(a->filho[i] != -1) {
+			fseek(arq,a->filho[i],SEEK_SET);
+			imprime(arq,andar+1, t);
+		}
 	}
 	libera(a);
 }
