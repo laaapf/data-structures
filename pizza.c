@@ -379,7 +379,8 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 
 void removeArq(FILE* pizzas, FILE* arvore, int cod, int t){
 	fseek(pizzas,0l,SEEK_END);
-	int posFim = ftell(pizzas) - tamanho_pizza_bytes();
+	int posFim = ftell(pizzas);
+	posFim -= tamanho_pizza_bytes();
 	fseek(pizzas,posFim,SEEK_SET);
 	TP* ultPizza = le_pizza(pizzas);
 	if(ultPizza->cod != cod){
@@ -402,6 +403,7 @@ void removeArq(FILE* pizzas, FILE* arvore, int cod, int t){
 		alteraEnderecoPizza(arvore,ultPizza->cod,t,posPizza);
 	}
 	//diminuiPizzas(pizzas,posFim);
+	rewind(pizzas);
 	int k = ftruncate(fileno(pizzas),posFim);
 }
 
@@ -712,7 +714,6 @@ int main(void){
 				if(!p) break;
 				imprime_pizza(p);
 			}
-
 		}else if(op==7){
 			TP* p;
 			p = le_pizza(inicial);
