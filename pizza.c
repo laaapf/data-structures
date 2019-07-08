@@ -27,7 +27,7 @@ int salva_no(TABM *a, FILE *out, int t){
 	fwrite(&a->nchaves, sizeof(int), 1, out);
 	fwrite(a->chave, sizeof(int), ((2*t)-1), out);
 	fwrite(&a->folha, sizeof(int), 1, out);
-	fwrite(a->filho, sizeof(int), ((2*t)-1), out);
+	fwrite(a->filho, sizeof(int), (2*t), out);
 	fwrite(a->pizza, sizeof(int), ((2*t)-1), out);
 	fwrite(&a->prox, sizeof(int), 1, out);
 	return resp;
@@ -41,7 +41,7 @@ TABM *le_no(FILE *in, int t){
 	}
 	fread(a->chave, sizeof(int), ((2*t)-1), in);
 	fread(&a->folha, sizeof(int), 1, in);
-	fread(a->filho, sizeof(int), ((2*t)-1), in);
+	fread(a->filho, sizeof(int), (2*t), in);
 	fread(a->pizza, sizeof(int), ((2*t)-1), in);
 	fread(&a->prox, sizeof(int), 1, in);
 	return a;
@@ -111,7 +111,7 @@ void altera_pizza(FILE *pizza, int end_pizza, char *nome, char *categoria, float
 	strcpy(p->nome, nome);
 	p->preco = preco;
 	fseek(pizza, end_pizza, SEEK_SET);
-	salva_pizza(p, pizza);
+	salva_pizza_atual(p, pizza);
 	return;
 }
 
@@ -411,17 +411,15 @@ void remove_categoria(FILE *pizza, FILE *arvore, char *categoria, int t){
 
 void imprime(FILE *arq, int andar, int t){
 	TABM* a = le_no(arq, t);
-	int i, j;
 	if(a){
+		int i, j;
 		for(i = 0; i<=a->nchaves - 1; i++){
 			fseek(arq,a->filho[i],SEEK_SET);
 			imprime(arq,andar + 1, t);
-			for(int j = 0; j<= andar; j++){
-				printf("    ");
-			}
-			if(a->folha) imprime_pizza_end(arq,a->pizza[i]);
-			else printf("%d\n",a->chave[i]);
-		}
+			for (j = 0; j <= andar; j++)
+                printf("   ");
+            printf("%d\n", a->chave[i]);
+        }
 		fseek(arq,a->filho[i],SEEK_SET);
 		imprime(arq,andar+1, t);
 	}
@@ -503,7 +501,7 @@ void insere_nao_completo(FILE *arvore, FILE * fpizza, TP *pizza, int t){
 void insere(FILE *arvore, FILE *fpizza , TP *pizza, int t){
 	rewind(arvore);
 	int end_pizza = busca_pizza(arvore , pizza->cod, t);
-	if (end_pizza =! -1){
+	if (end_pizza != -1){
 		altera_pizza(fpizza, end_pizza, pizza->nome, pizza->categoria, pizza->preco);
 		return;	
 	}
@@ -556,6 +554,15 @@ TP *pizza(int cod, char *nome, char *categoria, float preco){
 	strcpy(p->categoria, categoria);
 	p->preco = preco;
 	return p;
+}
+
+int salva_pizza_atual(TP *p, FILE *out){
+	int resp = ftell(out);
+	fwrite(&p->cod, sizeof(int), 1, out);
+	fwrite(p->nome, sizeof(char), sizeof(p->nome), out);
+	fwrite(p->categoria, sizeof(char), sizeof(p->categoria), out);
+	fwrite(&p->preco, sizeof(float), 1, out);
+	return resp;
 }
 
 int salva_pizza(TP *p, FILE *out){
@@ -621,9 +628,9 @@ int main(void){
 	if(!arvore) exit(1);
 	if(!pizzas) exit(1);
 	while(op != -1){
-		printf("Digite:\n\t-1 para sair\n\t0 para inserir uma pizza\n\t1 para remover uma pizza\n\t2 para buscar uma pizza com base no codigo\n\t3 para buscar todas as pizzas de uma categoria\n\t4 remover todas as pizzas de uma categoria\n");
+		printf("Digite:\n\t-1 para sair\n\t0 para inserir uma nova pizza ou alterar uma existente preservando o código\n\t1 para remover uma pizza\n\t2 para buscar uma pizza com base no codigo\n\t3 para buscar todas as pizzas de uma categoria\n\t4 remover todas as pizzas de uma categoria\n");
 		printf("\t5 para inicializar o arquivo fpizzas\n\t6 para imprimir as pizzas de fpizzas\n");
-		printf("\t7 rewind o arquivo pizzas\n\t8 inicializa o arquivo de pizzas com um número de pizzas do arquivo inicial\n\t9 Imprime a arvore e o arquivo de pizzas\n");
+		printf("\t7 insere a próxima pizza do arquivo inicial no arquivo de pizzas\n\t8 inicializa o arquivo de pizzas com um número de pizzas do arquivo inicial\n\t9 Imprime a arvore e o arquivo de pizzas\n");
 		scanf("%i", &op);
 		if(op == 0){
 			int cod;
@@ -639,6 +646,7 @@ int main(void){
 			printf("Digite o preço:");
 			scanf("%f",&preco);
 			TP *p = pizza(cod,nome,categoria,preco);
+			rewind(pizzas);
 			insere(arvore, pizzas, p, t);
 		}else if(op == 1){
 			int cod;
@@ -673,6 +681,8 @@ int main(void){
 			
 		}else if(op==6){
 			rewind(pizzas);
+			rewind(arvore);
+			imprime(arvore,0,t);
 			while(1){
 				TP* p = le_pizza(pizzas);
 				if(!p) break;
@@ -680,10 +690,56 @@ int main(void){
 			}
 
 		}else if(op==7){
-			rewind(pizzas);	
+			TP* p;
+			p = le_pizza(inicial);
+			insere(arvore, pizzas, p, t);
+			free(p);
+			rewind(pizzas);
+			rewind(arvore);
+			TABM* no = le_no(arvore,t);
+			int i;
+			printf("Nchaves = %d\n",no->nchaves);
+			for(i = 0; i<no->nchaves;i++){
+				printf("chave[%d] = %d\n",i,no->chave[i]);
+				printf("filho[%d] = %d\n",i,no->filho[i]);
+				if(no->filho[i] != -1){
+					int pos_ini = ftell(arvore);
+					fseek(arvore,no->filho[i],SEEK_SET);
+					TABM* f = le_no(arvore,t);
+					int j;
+					printf("nchaves = %d\n",f->nchaves);
+					for(j = 0; j<f->nchaves;j++){
+						printf("\tchave[%d] = %d\n",j,f->chave[j]);
+						printf("\tfilho[%d] = %d\n",j,f->filho[j]);
+					}
+					printf("\tfilho[%d] = %d\n",j,f->filho[j]);
+					fseek(arvore,pos_ini,SEEK_SET);
+				}
+			}
+			printf("filho[%d] = %d\n",i,no->filho[i]);
+			if(no->filho[i] != -1){
+					int pos_ini = ftell(arvore);
+					fseek(arvore,no->filho[i],SEEK_SET);
+					TABM* f = le_no(arvore,t);
+					int j;
+					printf("nchaves = %d\n",f->nchaves);
+					for(j = 0; j<f->nchaves;j++){
+						printf("\tchave[%d] = %d\n",j,f->chave[j]);
+						printf("\tfilho[%d] = %d\n",j,f->filho[j]);
+					}
+					printf("\tfilho[%d] = %d\n",j,f->filho[j]);
+					fseek(arvore,pos_ini,SEEK_SET);
+			}
+			printf("ja no arquivo\n");
+			p = le_pizza(pizzas);
+			while(p){
+				imprime_pizza(p);
+				p = le_pizza(pizzas);
+			}
+			free(p);	
 		}else if(op==8){
 			TP* p;
-			for(int k = 0;k<8;k++){
+			for(int k = 0;k<6;k++){
 				p = le_pizza(inicial);
 				insere(arvore, pizzas, p, t);
 			}

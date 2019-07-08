@@ -15,7 +15,6 @@ typedef struct arvbm{
   int nchaves, folha, *chave, *pizza, *filho, prox;
 }TABM;
 
-//Função de insere n trata se o código já é existente
 //Função remove deixando o pai com nchaves = 0 no caso 4
 
 void removeArq(FILE* pizzas, FILE* arvore, int cod, int t);
@@ -39,6 +38,7 @@ void altera_pizza(FILE *pizza, int end_pizza, char *nome, char *categoria, float
 TABM *divisao(FILE *arvore, TABM *x, int i, TABM *y, int end_y, int t);
 void insere_nao_completo(FILE *arvore, FILE * fpizza, TP *pizza, int t);
 void insere(FILE *arvore, FILE *fpizza , TP *pizza, int t);
+int salva_pizza_atual(TP *p, FILE *out);
 // Imprime pizza
 void imprime_pizza(TP *p);
 // Cria pizza
