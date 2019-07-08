@@ -207,7 +207,18 @@ TABM *removeCaso1(FILE* arvore, FILE*pizzas, TABM* a, int cod, int t){
 }
 void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 	rewind(arvore);
-	TABM* a = buscaPai(arvore,cod, t);
+	TABM* a = le_no(arvore,t);
+	rewind(arvore);
+	if(!a->folha) {
+		a = buscaPai(arvore,cod, t);
+	}else{
+		printf("caso1 - Raiz é uma folha\n");
+        a = removeCaso1(arvore,pizzas,a, cod, t);
+		rewind(arvore);
+		salva_no(a,arvore,t);
+		libera(a);
+		return;
+	}
 	if(!a) printf("pizza não encontrada");
 	int i = 0;
 	int pospai = ftell(arvore);
@@ -217,7 +228,7 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 	int posFilhoI = ftell(arvore);
 	TABM* filhoI = le_no(arvore, t); //filho[i]
 	if (filhoI->nchaves >= t){ //caso 1  i=2
-        printf("caso1");
+        printf("caso1\n");
         filhoI = removeCaso1(arvore,pizzas,filhoI, cod, t);
 		fseek(arvore,posFilhoI,SEEK_SET);
 		salva_no(filhoI,arvore,t);
@@ -230,7 +241,7 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 		int posFilhoAntesI = ftell(arvore);
 		TABM* filhoAntesI = le_no(arvore, t);
         if((i!=0)&&(filhoAntesI->nchaves >= t)){ //caso 2
-            printf("caso2");
+            printf("caso2\n");
             int maior = filhoAntesI->chave[filhoAntesI->nchaves - 1];
 			int maiorEnd = filhoAntesI->pizza[filhoAntesI->nchaves - 1];
             filhoAntesI->nchaves -= 1;
@@ -260,7 +271,7 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 		int posFilhoDepoisI = ftell(arvore);
 		TABM* filhoDepoisI = le_no(arvore, t);
 		if ((i!=(2*t))&&(filhoDepoisI->nchaves >= t)){ //caso 3
-            printf("caso3");
+            printf("caso3\n");
             int menor = filhoDepoisI->chave[0];
 			int menorEnd = filhoDepoisI->pizza[0]; //
             filhoDepoisI = removeCaso1(arvore, pizzas, filhoDepoisI, menor, t);
@@ -283,7 +294,7 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 			libera(filhoAntesI);
             return;
         }else if (i != 0){ // caso 4
-            printf("caso4");
+            printf("caso4\n");
             filhoI = removeCaso1(arvore, pizzas, filhoI, cod, t);
             int x = filhoAntesI->nchaves; //posição no vetor esq
             int b = 0;                        //posição no vetor que retirou o elemento
@@ -317,7 +328,7 @@ void removea(FILE* arvore, FILE* pizzas, int cod, int t){
 			libera(filhoAntesI);
         }
 		else if (i != 2 * t) { //caso 5
-            printf("caso5");
+            printf("caso5\n");
             filhoI = removeCaso1(arvore, pizzas, filhoI, cod, t);
             int x = filhoDepoisI->nchaves; //posição no vetor dir
             int b = 0;                        //posição no vetor que retirou o elemento
@@ -643,7 +654,7 @@ int main(void){
 	while(op != -1){
 		printf("Digite:\n\t-1 para sair\n\t0 para inserir uma nova pizza ou alterar uma existente preservando o código\n\t1 para remover uma pizza\n\t2 para buscar uma pizza com base no codigo\n\t3 para buscar todas as pizzas de uma categoria\n\t4 remover todas as pizzas de uma categoria\n");
 		printf("\t5 para inicializar o arquivo fpizzas\n\t6 para imprimir as pizzas de fpizzas\n");
-		printf("\t7 insere a próxima pizza do arquivo inicial no arquivo de pizzas\n\t8 inicializa o arquivo de pizzas com um número de pizzas do arquivo inicial\n\t9 Imprime a arvore e o arquivo de pizzas\n");
+		printf("\t7 insere a próxima pizza do arquivo inicial no arquivo de pizzas\n\t8 inicializa o arquivo de pizzas com um número de pizzas do arquivo inicial\n");
 		scanf("%i", &op);
 		if(op == 0){
 			int cod;
@@ -707,102 +718,12 @@ int main(void){
 			p = le_pizza(inicial);
 			insere(arvore, pizzas, p, t);
 			free(p);
-			rewind(pizzas);
-			rewind(arvore);
-			TABM* no = le_no(arvore,t);
-			int i;
-			printf("Nchaves = %d\n",no->nchaves);
-			for(i = 0; i<no->nchaves;i++){
-				printf("chave[%d] = %d\n",i,no->chave[i]);
-				printf("filho[%d] = %d\n",i,no->filho[i]);
-				if(no->filho[i] != -1){
-					int pos_ini = ftell(arvore);
-					fseek(arvore,no->filho[i],SEEK_SET);
-					TABM* f = le_no(arvore,t);
-					int j;
-					printf("nchaves = %d\n",f->nchaves);
-					for(j = 0; j<f->nchaves;j++){
-						printf("\tchave[%d] = %d\n",j,f->chave[j]);
-						printf("\tfilho[%d] = %d\n",j,f->filho[j]);
-					}
-					printf("\tfilho[%d] = %d\n",j,f->filho[j]);
-					fseek(arvore,pos_ini,SEEK_SET);
-				}
-			}
-			printf("filho[%d] = %d\n",i,no->filho[i]);
-			if(no->filho[i] != -1){
-					int pos_ini = ftell(arvore);
-					fseek(arvore,no->filho[i],SEEK_SET);
-					TABM* f = le_no(arvore,t);
-					int j;
-					printf("nchaves = %d\n",f->nchaves);
-					for(j = 0; j<f->nchaves;j++){
-						printf("\tchave[%d] = %d\n",j,f->chave[j]);
-						printf("\tfilho[%d] = %d\n",j,f->filho[j]);
-					}
-					printf("\tfilho[%d] = %d\n",j,f->filho[j]);
-					fseek(arvore,pos_ini,SEEK_SET);
-			}
-			printf("ja no arquivo\n");
-			p = le_pizza(pizzas);
-			while(p){
-				imprime_pizza(p);
-				p = le_pizza(pizzas);
-			}
-			free(p);	
 		}else if(op==8){
 			TP* p;
-			for(int k = 0;k<6;k++){
-				p = le_pizza(inicial);
-				insere(arvore, pizzas, p, t);
-			}
-			// p = le_pizza(inicial);
-			// while(p){
-			// 	insere(arvore, pizzas, p, t);
-			// 	p = le_pizza(inicial);
-			// }
-			free(p);
-			rewind(pizzas);
-			rewind(arvore);
-			TABM* no = le_no(arvore,t);
-			int i;
-			printf("Nchaves = %d\n",no->nchaves);
-			for(i = 0; i<no->nchaves;i++){
-				printf("chave[%d] = %d\n",i,no->chave[i]);
-				printf("filho[%d] = %d\n",i,no->filho[i]);
-				if(no->filho[i] != -1){
-					int pos_ini = ftell(arvore);
-					fseek(arvore,no->filho[i],SEEK_SET);
-					TABM* f = le_no(arvore,t);
-					int j;
-					printf("nchaves = %d\n",f->nchaves);
-					for(j = 0; j<f->nchaves;j++){
-						printf("\tchave[%d] = %d\n",j,f->chave[j]);
-						printf("\tfilho[%d] = %d\n",j,f->filho[j]);
-					}
-					printf("\tfilho[%d] = %d\n",j,f->filho[j]);
-					fseek(arvore,pos_ini,SEEK_SET);
-				}
-			}
-			printf("filho[%d] = %d\n",i,no->filho[i]);
-			if(no->filho[i] != -1){
-					int pos_ini = ftell(arvore);
-					fseek(arvore,no->filho[i],SEEK_SET);
-					TABM* f = le_no(arvore,t);
-					int j;
-					printf("nchaves = %d\n",f->nchaves);
-					for(j = 0; j<f->nchaves;j++){
-						printf("\tchave[%d] = %d\n",j,f->chave[j]);
-						printf("\tfilho[%d] = %d\n",j,f->filho[j]);
-					}
-					printf("\tfilho[%d] = %d\n",j,f->filho[j]);
-					fseek(arvore,pos_ini,SEEK_SET);
-			}
-			printf("ja no arquivo\n");
-			p = le_pizza(pizzas);
+			p = le_pizza(inicial);
 			while(p){
-				imprime_pizza(p);
-				p = le_pizza(pizzas);
+				insere(arvore, pizzas, p, t);
+				p = le_pizza(inicial);
 			}
 			free(p);
 		}else if(op == 9){
