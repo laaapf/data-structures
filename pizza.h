@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 typedef struct pz{
     int cod;
@@ -12,37 +14,31 @@ typedef struct pz{
 typedef struct arvbm{
   int nchaves, folha, *chave, *pizza, *filho, prox;
 }TABM;
-/* 
-  A estrutura de arvore possui as seguintes informações:
-    nchaves: armazena o numero de chaves preenchidas no vetor;
-    folha: se a arvore é uma folha ou não;
-    vetor de chaves: as chaves da arvore q vão ser usadas pra fazer o controle dos limites de cada nó;
-    vetor de pizzas: caso seja uma folha o endereço da respectiva pizza no arquivo de pizzas;
-    vetor de filhos: caso não seja folha o endereço, para o mesmo arquivo da arvore, do filho daquela posição;
-    prox: caso seja uma folha o endereço da proxima pizza dentro do arquivo de pizzas
 
+//Função remove deixando o pai com nchaves = 0 no caso 4
 
-  OBS: as funçoes abaixo comentadas foram feitas pela vanessa logo, estão funcionando.
-*/
-
+void removeArq(FILE* pizzas, FILE* arvore, int cod, int t);
+void alteraEnderecoPizza(FILE *arvore, int cod, int t, int novoEnd);
+void diminuiPizzas(FILE* pizzas, int posFim);
 TABM *inicializa(void);
 TABM *cria(int t);
-int salva_no(TABM *a, FILE *out);
-TABM *le_no(FILE *in);
+int salva_no(TABM *a, FILE *out, int t);
+TABM *le_no(FILE *in, int t);
 int tamanho_no(int t);
 void libera(TABM *a);
-int busca_pizza(FILE *arvore, int cod);
+int busca_pizza(FILE *arvore, int cod, int t);
 void busca_categoria(FILE *pizza, FILE* arvore, char *categoria);
 void removea(FILE* arvore, FILE* pizzas, int cod, int t);
-TABM *buscaPai(FILE* arvore,int cod);
-TABM *removeCaso1(FILE* arvore, FILE*pizzas, TABM* a, int cod);
-void remove_categoria(FILE *pizza, FILE* arvore, char *categoria);
-void imprime(FILE *arq, int andar);
+TABM *buscaPai(FILE* arvore,int cod, int t);
+TABM *removeCaso1(FILE* arvore, FILE*pizzas, TABM* a, int cod, int t);
+void remove_categoria(FILE *pizza, FILE* arvore, char *categoria, int t);
+void imprime(FILE *arq, int andar, int t);
 void imprime_pizza_end(FILE *pizza, long end);
 void altera_pizza(FILE *pizza, int end_pizza, char *nome, char *categoria, float preco);
 TABM *divisao(FILE *arvore, TABM *x, int i, TABM *y, int end_y, int t);
 void insere_nao_completo(FILE *arvore, FILE * fpizza, TP *pizza, int t);
 void insere(FILE *arvore, FILE *fpizza , TP *pizza, int t);
+int salva_pizza_atual(TP *p, FILE *out);
 // Imprime pizza
 void imprime_pizza(TP *p);
 // Cria pizza
